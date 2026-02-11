@@ -1078,5 +1078,20 @@
     "first_seen": "2026-02-11T12:04:32.599919+00:00",
     "address": "54 West 106th Street #3D",
     "price": "$3,395"
+  },
+  "https://streeteasy.com/building/windermere-666-west-end-avenue-new_york/23bb": {
+    "first_seen": "2026-02-11T13:15:10.249733+00:00",
+    "address": "666 West End Avenue #23BB",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/2701-broadway-new_york/5a": {
+    "first_seen": "2026-02-11T13:15:11.404726+00:00",
+    "address": "235 West 103rd Street #5A",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/133-west-71-street-new_york/2a": {
+    "first_seen": "2026-02-11T13:15:12.688154+00:00",
+    "address": "133 West 71st Street #2A",
+    "price": "$3,045"
   }
 }
