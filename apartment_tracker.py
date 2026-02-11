@@ -13,7 +13,10 @@ from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, Browser, Page
+from curl_cffi import requests as cffi_requests
+
+# curl_cffi session reused across requests (Chrome TLS fingerprint)
+_cffi_session: cffi_requests.Session | None = None
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -121,52 +124,53 @@ def build_search_url(neighborhood: str, config: dict) -> str:
     return f"{STREETEASY_BASE}/for-rent/{neighborhood}/{quote(filters, safe=':|-')}"
 
 
-class BrowserSession:
-    """Manages a Playwright browser for scraping."""
+class ScraperSession:
+    """Lightweight wrapper around curl_cffi with Chrome TLS impersonation."""
 
     def __init__(self):
-        self._pw = sync_playwright().start()
-        self._browser: Browser = self._pw.chromium.launch(headless=True)
-        self._context = self._browser.new_context(
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            viewport={"width": 1280, "height": 800},
-            locale="en-US",
-        )
-        self._page: Page = self._context.new_page()
+        global _cffi_session
+        _cffi_session = cffi_requests.Session(impersonate="chrome")
+        self._session = _cffi_session
 
     def close(self):
-        self._context.close()
-        self._browser.close()
-        self._pw.stop()
+        self._session.close()
 
     def fetch(self, url: str) -> BeautifulSoup | None:
-        """Navigate to URL and return parsed soup."""
+        """Fetch URL with Chrome TLS fingerprint and return parsed soup."""
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Cache-Control": "max-age=0",
+            "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"macOS"',
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+        }
         try:
-            resp = self._page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            if resp and resp.status == 403:
-                log.warning("Got 403 for %s — may be rate-limited", url)
+            resp = self._session.get(url, headers=headers, timeout=30)
+            if resp.status_code == 403:
+                log.warning("Got 403 for %s — may be rate-limited or blocked", url)
                 return None
-            if resp and resp.status >= 400:
-                log.error("HTTP %d for %s", resp.status, url)
+            if resp.status_code >= 400:
+                log.error("HTTP %d for %s", resp.status_code, url)
                 return None
-            # Wait for listing cards to appear (or timeout after 5s)
-            try:
-                self._page.wait_for_selector('[data-testid="listing-card"]', timeout=5000)
-            except Exception:
-                pass  # Page may have loaded but no cards (e.g. 0 results)
-            html = self._page.content()
-            return BeautifulSoup(html, "lxml")
+            return BeautifulSoup(resp.text, "lxml")
         except Exception as e:
             log.error("Failed to fetch %s: %s", url, e)
             return None
 
 
-def get_session(config: dict) -> BrowserSession:
-    """Create a browser session for scraping."""
-    return BrowserSession()
+def get_session(config: dict) -> ScraperSession:
+    """Create a scraper session with Chrome TLS impersonation."""
+    return ScraperSession()
 
 
-def fetch_page(session: BrowserSession, url: str) -> BeautifulSoup | None:
+def fetch_page(session: ScraperSession, url: str) -> BeautifulSoup | None:
     """Fetch a page and return parsed soup, or None on failure."""
     return session.fetch(url)
 
@@ -272,7 +276,7 @@ def get_max_page(soup: BeautifulSoup) -> int:
     return max_page
 
 
-def scrape_neighborhood(session: BrowserSession, neighborhood: str, config: dict) -> list[dict]:
+def scrape_neighborhood(session: ScraperSession, neighborhood: str, config: dict) -> list[dict]:
     """Scrape all pages of listings for a neighborhood."""
     base_url = build_search_url(neighborhood, config)
     delay = config["scraper"]["request_delay_seconds"]
