@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright, Browser, Page
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -120,36 +121,54 @@ def build_search_url(neighborhood: str, config: dict) -> str:
     return f"{STREETEASY_BASE}/for-rent/{neighborhood}/{quote(filters, safe=':|-')}"
 
 
-def get_session(config: dict) -> requests.Session:
-    """Create a requests session with appropriate headers."""
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": config["scraper"]["user_agent"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-    })
-    return session
+class BrowserSession:
+    """Manages a Playwright browser for scraping."""
 
+    def __init__(self):
+        self._pw = sync_playwright().start()
+        self._browser: Browser = self._pw.chromium.launch(headless=True)
+        self._context = self._browser.new_context(
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 800},
+            locale="en-US",
+        )
+        self._page: Page = self._context.new_page()
 
-def fetch_page(session: requests.Session, url: str) -> BeautifulSoup | None:
-    """Fetch a page and return parsed soup, or None on failure."""
-    try:
-        resp = session.get(url, timeout=30)
-        if resp.status_code == 403:
-            log.warning("Got 403 for %s — may be rate-limited", url)
+    def close(self):
+        self._context.close()
+        self._browser.close()
+        self._pw.stop()
+
+    def fetch(self, url: str) -> BeautifulSoup | None:
+        """Navigate to URL and return parsed soup."""
+        try:
+            resp = self._page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            if resp and resp.status == 403:
+                log.warning("Got 403 for %s — may be rate-limited", url)
+                return None
+            if resp and resp.status >= 400:
+                log.error("HTTP %d for %s", resp.status, url)
+                return None
+            # Wait for listing cards to appear (or timeout after 5s)
+            try:
+                self._page.wait_for_selector('[data-testid="listing-card"]', timeout=5000)
+            except Exception:
+                pass  # Page may have loaded but no cards (e.g. 0 results)
+            html = self._page.content()
+            return BeautifulSoup(html, "lxml")
+        except Exception as e:
+            log.error("Failed to fetch %s: %s", url, e)
             return None
-        resp.raise_for_status()
-        return BeautifulSoup(resp.text, "lxml")
-    except requests.RequestException as e:
-        log.error("Failed to fetch %s: %s", url, e)
-        return None
+
+
+def get_session(config: dict) -> BrowserSession:
+    """Create a browser session for scraping."""
+    return BrowserSession()
+
+
+def fetch_page(session: BrowserSession, url: str) -> BeautifulSoup | None:
+    """Fetch a page and return parsed soup, or None on failure."""
+    return session.fetch(url)
 
 
 def parse_listings(soup: BeautifulSoup) -> list[dict]:
@@ -253,7 +272,7 @@ def get_max_page(soup: BeautifulSoup) -> int:
     return max_page
 
 
-def scrape_neighborhood(session: requests.Session, neighborhood: str, config: dict) -> list[dict]:
+def scrape_neighborhood(session: BrowserSession, neighborhood: str, config: dict) -> list[dict]:
     """Scrape all pages of listings for a neighborhood."""
     base_url = build_search_url(neighborhood, config)
     delay = config["scraper"]["request_delay_seconds"]
@@ -497,6 +516,9 @@ def main():
     if is_first_run and webhook_url and new_listings:
         send_discord_summary(webhook_url, new_listings, config)
         log.info("Sent first-run summary notification (%d listings)", len(new_listings))
+
+    # Close browser
+    session.close()
 
     # Save seen listings
     save_seen(seen)
