@@ -1063,5 +1063,20 @@
     "first_seen": "2026-02-11T11:30:32.260056+00:00",
     "address": "471 Central Park West #5A",
     "price": "$3,500"
+  },
+  "https://streeteasy.com/building/237-west-20-street-new_york/5c": {
+    "first_seen": "2026-02-11T12:04:18.063500+00:00",
+    "address": "237 West 20th Street #5C",
+    "price": "$3,299"
+  },
+  "https://streeteasy.com/building/329-west-88-street-new_york/4s": {
+    "first_seen": "2026-02-11T12:04:31.414643+00:00",
+    "address": "329 West 88th Street #4S",
+    "price": "$3,595"
+  },
+  "https://streeteasy.com/building/54-west-106-street-new_york/3d": {
+    "first_seen": "2026-02-11T12:04:32.599919+00:00",
+    "address": "54 West 106th Street #3D",
+    "price": "$3,395"
   }
 }
