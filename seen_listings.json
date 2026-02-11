@@ -1,1 +1,852 @@
-{}
+{
+  "https://streeteasy.com/building/337-east-21-street-new_york/3h": {
+    "first_seen": "2026-02-11T04:38:54.367419+00:00",
+    "address": "337 East 21st Street #3H",
+    "price": "$2,800"
+  },
+  "https://streeteasy.com/building/the-sage-house/8p": {
+    "first_seen": "2026-02-11T04:38:54.367469+00:00",
+    "address": "4 Lexington Avenue #8P",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/151-east-20-street-new_york/5e": {
+    "first_seen": "2026-02-11T04:38:54.367533+00:00",
+    "address": "151 East 20th Street #5E",
+    "price": "$3,050"
+  },
+  "https://streeteasy.com/building/105-east-15-street-new_york/58": {
+    "first_seen": "2026-02-11T04:38:54.367575+00:00",
+    "address": "105 East 15th Street #58",
+    "price": "$3,160"
+  },
+  "https://streeteasy.com/building/345-east-19-street-new_york/1a": {
+    "first_seen": "2026-02-11T04:38:54.367609+00:00",
+    "address": "345 East 19th Street #1A",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/296-3-avenue-new_york/2a": {
+    "first_seen": "2026-02-11T04:38:54.367642+00:00",
+    "address": "162 East 23rd Street #2A",
+    "price": "$3,550"
+  },
+  "https://streeteasy.com/building/172-5-avenue-new_york/3a": {
+    "first_seen": "2026-02-11T04:38:56.600977+00:00",
+    "address": "172 5th Avenue #3A",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/106-east-30-street-new_york/2f": {
+    "first_seen": "2026-02-11T04:38:56.601044+00:00",
+    "address": "106 East 30th Street #2F",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/115-east-27-street-new_york/1c": {
+    "first_seen": "2026-02-11T04:38:56.601085+00:00",
+    "address": "115 East 27th Street #1C",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/126-lexington-avenue-new_york/4f": {
+    "first_seen": "2026-02-11T04:38:56.601134+00:00",
+    "address": "126 Lexington Avenue #4F",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/waterside-plaza/4025l": {
+    "first_seen": "2026-02-11T04:39:03.433290+00:00",
+    "address": "30 Waterside Plaza #4025L",
+    "price": "$3,413"
+  },
+  "https://streeteasy.com/building/waterside-plaza/1021h": {
+    "first_seen": "2026-02-11T04:39:03.433376+00:00",
+    "address": "30 Waterside Plaza #1021H",
+    "price": "$3,573"
+  },
+  "https://streeteasy.com/building/waterside-plaza/4012l": {
+    "first_seen": "2026-02-11T04:39:03.433423+00:00",
+    "address": "30 Waterside Plaza #4012L",
+    "price": "$3,348"
+  },
+  "https://streeteasy.com/building/148-east-30-street-new_york/1a": {
+    "first_seen": "2026-02-11T04:39:03.433460+00:00",
+    "address": "148 East 30th Street #1A",
+    "price": "$3,095"
+  },
+  "https://streeteasy.com/building/417-3-avenue-new_york/2c": {
+    "first_seen": "2026-02-11T04:39:03.433496+00:00",
+    "address": "417 3rd Avenue #2C",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/331-east-33-street-new_york/4c": {
+    "first_seen": "2026-02-11T04:39:03.433559+00:00",
+    "address": "331 East 33rd Street #4C",
+    "price": "$2,799"
+  },
+  "https://streeteasy.com/building/73-lexington-avenue-new_york/b2": {
+    "first_seen": "2026-02-11T04:39:03.433598+00:00",
+    "address": "73 Lexington Avenue #B2",
+    "price": "$2,560"
+  },
+  "https://streeteasy.com/building/350-east-30-street-new_york/5x": {
+    "first_seen": "2026-02-11T04:39:03.433635+00:00",
+    "address": "350 East 30th Street #5X",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/144-east-24-street-new_york/phr": {
+    "first_seen": "2026-02-11T04:39:03.433669+00:00",
+    "address": "144 East 24th Street #PHR",
+    "price": "$3,550"
+  },
+  "https://streeteasy.com/building/235-east-27-street-new_york/1c": {
+    "first_seen": "2026-02-11T04:39:03.433703+00:00",
+    "address": "235 East 27th Street #1C",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/229-east-29-street-new_york/2j": {
+    "first_seen": "2026-02-11T04:39:03.433740+00:00",
+    "address": "229 East 29th Street #2J",
+    "price": "$2,800"
+  },
+  "https://streeteasy.com/building/127-lexington-avenue-new_york/1": {
+    "first_seen": "2026-02-11T04:39:03.433771+00:00",
+    "address": "127 Lexington Avenue #1",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/340-east-29-street-new_york/16a": {
+    "first_seen": "2026-02-11T04:39:03.433799+00:00",
+    "address": "340 East 29th Street #16A",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/223-east-32-street-new_york/1rw": {
+    "first_seen": "2026-02-11T04:39:03.433825+00:00",
+    "address": "223 East 32nd Street #1RW",
+    "price": "$3,075"
+  },
+  "https://streeteasy.com/building/425-3-avenue-new_york/4m": {
+    "first_seen": "2026-02-11T04:39:03.433852+00:00",
+    "address": "200 East 30th Street #4M",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/221-east-33-street-new_york/u2a": {
+    "first_seen": "2026-02-11T04:39:03.433879+00:00",
+    "address": "221 East 33rd Street #U2A",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/137-east-29-street-new_york/3t": {
+    "first_seen": "2026-02-11T04:39:03.433905+00:00",
+    "address": "137 East 29th Street #3T",
+    "price": "$3,350"
+  },
+  "https://streeteasy.com/building/326-east-34-street-new_york/b1": {
+    "first_seen": "2026-02-11T04:39:03.433931+00:00",
+    "address": "326 East 34th Street #B1",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/221-east-32-street-new_york/8": {
+    "first_seen": "2026-02-11T04:39:03.433957+00:00",
+    "address": "221 East 32nd Street #8",
+    "price": "$2,970"
+  },
+  "https://streeteasy.com/building/208-east-25-street-new_york/lw": {
+    "first_seen": "2026-02-11T04:39:03.433983+00:00",
+    "address": "208 East 25th Street #LW",
+    "price": "$3,095"
+  },
+  "https://streeteasy.com/building/212-east-26-street-new_york/2c": {
+    "first_seen": "2026-02-11T04:39:03.434009+00:00",
+    "address": "212 East 26th Street #2C",
+    "price": "$2,600"
+  },
+  "https://streeteasy.com/building/208-east-25-street-new_york/lde": {
+    "first_seen": "2026-02-11T04:39:03.434034+00:00",
+    "address": "208 East 25th Street #LDE",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/159-1-avenue-new_york/1": {
+    "first_seen": "2026-02-11T04:39:12.562169+00:00",
+    "address": "242 East Tenth Street #1",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/217-east-10-street-new_york/16": {
+    "first_seen": "2026-02-11T04:39:12.562240+00:00",
+    "address": "217 East Tenth Street #16",
+    "price": "$3,350"
+  },
+  "https://streeteasy.com/building/438-east-9-street-new_york/7": {
+    "first_seen": "2026-02-11T04:39:12.562283+00:00",
+    "address": "438 East 9th Street #7",
+    "price": "$3,595"
+  },
+  "https://streeteasy.com/building/154-east-7-street-new_york/re": {
+    "first_seen": "2026-02-11T04:39:12.562315+00:00",
+    "address": "154 East 7th Street #RE",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/89-avenue-a-new_york/1e": {
+    "first_seen": "2026-02-11T04:39:12.562346+00:00",
+    "address": "440 East Sixth Street #1E",
+    "price": "$2,650"
+  },
+  "https://streeteasy.com/building/27-avenue-c-new_york/1d": {
+    "first_seen": "2026-02-11T04:39:12.562375+00:00",
+    "address": "27 Avenue C #1D",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/82-east-3-street-new_york/4d": {
+    "first_seen": "2026-02-11T04:39:12.562410+00:00",
+    "address": "82 East 3rd Street #4D",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/233-east-4th-street-east_village/4f": {
+    "first_seen": "2026-02-11T04:39:12.562446+00:00",
+    "address": "233 East 4th Street #4F",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/338-east-11-street-new_york/5r": {
+    "first_seen": "2026-02-11T04:39:12.562480+00:00",
+    "address": "338 East 11th Street #5R",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/232-east-2-street-new_york/4b": {
+    "first_seen": "2026-02-11T04:39:12.562533+00:00",
+    "address": "232 East 2nd Street #4B",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/222-1-avenue-new_york/4c": {
+    "first_seen": "2026-02-11T04:39:12.562572+00:00",
+    "address": "222 1st Avenue #4C",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/430-east-11-street-new_york/16": {
+    "first_seen": "2026-02-11T04:39:12.562612+00:00",
+    "address": "430 East 11th Street #16",
+    "price": "$2,600"
+  },
+  "https://streeteasy.com/building/185-avenue-c-new_york/3b": {
+    "first_seen": "2026-02-11T04:39:12.562642+00:00",
+    "address": "185 Avenue C #3B",
+    "price": "$2,725"
+  },
+  "https://streeteasy.com/building/261-east-10-street-new_york/6": {
+    "first_seen": "2026-02-11T04:39:12.562669+00:00",
+    "address": "261 East 10th Street #6",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/untitled-58-avenue-a-new_york/2g": {
+    "first_seen": "2026-02-11T04:39:12.562695+00:00",
+    "address": "66 Avenue A #2G",
+    "price": "$3,020"
+  },
+  "https://streeteasy.com/building/606-east-11-street-new_york/3cc": {
+    "first_seen": "2026-02-11T04:39:12.562724+00:00",
+    "address": "606 East 11th Street #3CC",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/46-east-1-street-new_york/4cc": {
+    "first_seen": "2026-02-11T04:39:12.562760+00:00",
+    "address": "46 East 1st Street #4/CC",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/222-1-avenue-new_york/4b": {
+    "first_seen": "2026-02-11T04:39:12.562792+00:00",
+    "address": "222 1st Avenue #4B",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/234-east-3-street-new_york/2a": {
+    "first_seen": "2026-02-11T04:39:12.562834+00:00",
+    "address": "234 East 3rd Street #2A",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/231-east-4-street-new_york/4c": {
+    "first_seen": "2026-02-11T04:39:12.562882+00:00",
+    "address": "231 East 4th Street #4C",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/344-east-9-street-new_york/1": {
+    "first_seen": "2026-02-11T04:39:12.562932+00:00",
+    "address": "344 East 9th Street #1",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/103-east-2-street-new_york/14": {
+    "first_seen": "2026-02-11T04:39:12.562979+00:00",
+    "address": "103 East 2nd Street #14",
+    "price": "$3,350"
+  },
+  "https://streeteasy.com/building/344-east-9-street-new_york/2": {
+    "first_seen": "2026-02-11T04:39:12.563026+00:00",
+    "address": "344 East 9th Street #2",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/607-east-11-street-new_york/41": {
+    "first_seen": "2026-02-11T04:39:12.563072+00:00",
+    "address": "607 East 11th Street #41",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/543-and-a-half-east-6-street-new_york/5": {
+    "first_seen": "2026-02-11T04:39:12.563118+00:00",
+    "address": "543 1/2 East 6th Street #5",
+    "price": "$3,395"
+  },
+  "https://streeteasy.com/building/309-east-8-street-new_york/b": {
+    "first_seen": "2026-02-11T04:39:12.563163+00:00",
+    "address": "309 East 8th Street #B",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/518-east-6-street-new_york/08": {
+    "first_seen": "2026-02-11T04:39:12.563209+00:00",
+    "address": "518 East 6th Street #8",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/134-east-7-street-new_york/5c": {
+    "first_seen": "2026-02-11T04:39:12.563254+00:00",
+    "address": "140 East 7th Street #5C",
+    "price": "$3,050"
+  },
+  "https://streeteasy.com/building/46-east-1-street-new_york/2b": {
+    "first_seen": "2026-02-11T04:39:12.563298+00:00",
+    "address": "46 East 1st Street #2/B",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/320-east-11-street-new_york/201": {
+    "first_seen": "2026-02-11T04:39:12.563342+00:00",
+    "address": "320 East 11th Street #201",
+    "price": "$2,500"
+  },
+  "https://streeteasy.com/building/42-avenue-b-new_york/5": {
+    "first_seen": "2026-02-11T04:39:12.563387+00:00",
+    "address": "42 Avenue B #5",
+    "price": "$3,440"
+  },
+  "https://streeteasy.com/building/231-east-4-street-new_york/4e": {
+    "first_seen": "2026-02-11T04:39:12.563432+00:00",
+    "address": "231 East 4th Street #4E",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/149-1-avenue-new_york/13f": {
+    "first_seen": "2026-02-11T04:39:12.563478+00:00",
+    "address": "149 1st Avenue #13F",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/328-east-14-street-new_york/16": {
+    "first_seen": "2026-02-11T04:39:12.563539+00:00",
+    "address": "328 East 14th Street #16",
+    "price": "$3,350"
+  },
+  "https://streeteasy.com/building/120-east-4-street-new_york/4c": {
+    "first_seen": "2026-02-11T04:39:12.563574+00:00",
+    "address": "120 East Fourth Street #4C",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/344-east-9-street-new_york/9": {
+    "first_seen": "2026-02-11T04:39:12.563604+00:00",
+    "address": "344 East 9th Street #9",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/330-east-11-street-new_york/7": {
+    "first_seen": "2026-02-11T04:39:12.563635+00:00",
+    "address": "330 East 11th Street #7",
+    "price": "$3,150"
+  },
+  "https://streeteasy.com/building/332-east-11-street-new_york/5": {
+    "first_seen": "2026-02-11T04:39:12.563667+00:00",
+    "address": "332 East 11th Street #5",
+    "price": "$2,950"
+  },
+  "https://streeteasy.com/building/185-avenue-c-new_york/5b": {
+    "first_seen": "2026-02-11T04:39:12.563697+00:00",
+    "address": "185 Avenue C #5B",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/115-east-12-street-new_york/3b": {
+    "first_seen": "2026-02-11T04:39:12.563725+00:00",
+    "address": "121 East 12th Street #3B",
+    "price": "$3,395"
+  },
+  "https://streeteasy.com/building/520-east-6-street-new_york/1r": {
+    "first_seen": "2026-02-11T04:39:12.563753+00:00",
+    "address": "520 East 6th Street #1R",
+    "price": "$2,895"
+  },
+  "https://streeteasy.com/building/341-east-9-street-new_york/2": {
+    "first_seen": "2026-02-11T04:39:12.563780+00:00",
+    "address": "341 East 9th Street #2",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/64-norfolk-street-new_york/17d": {
+    "first_seen": "2026-02-11T04:39:17.085715+00:00",
+    "address": "64 Norfolk Street #17D",
+    "price": "$1,729"
+  },
+  "https://streeteasy.com/building/175-ludlow-street-new_york/12a": {
+    "first_seen": "2026-02-11T04:39:17.085773+00:00",
+    "address": "175 Ludlow Street #12A",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/101-clinton-street-new_york/3": {
+    "first_seen": "2026-02-11T04:39:17.085822+00:00",
+    "address": "101 Clinton Street #3",
+    "price": "$3,150"
+  },
+  "https://streeteasy.com/building/181-east-broadway-new_york/3d": {
+    "first_seen": "2026-02-11T04:39:17.085869+00:00",
+    "address": "181 East Broadway #3D",
+    "price": "$2,950"
+  },
+  "https://streeteasy.com/building/64-norfolk-street-new_york/7e": {
+    "first_seen": "2026-02-11T04:39:17.085915+00:00",
+    "address": "64 Norfolk Street #7E",
+    "price": "$1,590"
+  },
+  "https://streeteasy.com/building/158-stanton-street-new_york/5a": {
+    "first_seen": "2026-02-11T04:39:17.085961+00:00",
+    "address": "158 Stanton Street #5A",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/151-ludlow-street-new_york/4a": {
+    "first_seen": "2026-02-11T04:39:17.086006+00:00",
+    "address": "151 Ludlow Street #4A",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/57-clinton-street-new_york/3f": {
+    "first_seen": "2026-02-11T04:39:17.086051+00:00",
+    "address": "57 Clinton Street #3F",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/43-clinton-street-new_york/2d": {
+    "first_seen": "2026-02-11T04:39:17.086096+00:00",
+    "address": "43 Clinton Street #2D",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/383-387-grand-st-building-4/m502": {
+    "first_seen": "2026-02-11T04:39:17.086140+00:00",
+    "address": "383 Grand Street #M502",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/168-ludlow-street-new_york/3": {
+    "first_seen": "2026-02-11T04:39:17.086185+00:00",
+    "address": "168 Ludlow Street #3",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/168-ludlow-street-new_york/unit3": {
+    "first_seen": "2026-02-11T04:39:17.086229+00:00",
+    "address": "168 Ludlow Street #UNIT3",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/91-clinton-street-new_york/8": {
+    "first_seen": "2026-02-11T04:39:17.086277+00:00",
+    "address": "91 Clinton Street #8",
+    "price": "$2,900"
+  },
+  "https://streeteasy.com/building/156-orchard-street-new_york/2e": {
+    "first_seen": "2026-02-11T04:39:17.086322+00:00",
+    "address": "156 Orchard Street #2E",
+    "price": "$2,650"
+  },
+  "https://streeteasy.com/building/25-clinton-street-new_york/503": {
+    "first_seen": "2026-02-11T04:39:17.086371+00:00",
+    "address": "25 Clinton Street #503",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/84-madison-street-new_york/10": {
+    "first_seen": "2026-02-11T04:39:17.086417+00:00",
+    "address": "84 Madison Street #10",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/54-market-street-new_york/3c": {
+    "first_seen": "2026-02-11T04:39:17.086461+00:00",
+    "address": "54 Market Street #3C",
+    "price": "$2,495"
+  },
+  "https://streeteasy.com/building/165-ludlow-street-new_york/2a": {
+    "first_seen": "2026-02-11T04:39:17.086521+00:00",
+    "address": "165 Ludlow Street #2A",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/158-rivington-street-new_york/4r": {
+    "first_seen": "2026-02-11T04:39:17.086568+00:00",
+    "address": "158 Rivington Street #4R",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/24-bedford-street-new_york/a": {
+    "first_seen": "2026-02-11T04:39:21.735005+00:00",
+    "address": "26 Bedford Street #A",
+    "price": "$3,275"
+  },
+  "https://streeteasy.com/building/17-gay-street-new_york/9": {
+    "first_seen": "2026-02-11T04:39:21.735068+00:00",
+    "address": "17 Gay Street #9",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/1-bank-street-new_york/4d": {
+    "first_seen": "2026-02-11T04:39:21.735115+00:00",
+    "address": "1 Bank Street #4D",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/51-leroy-street-new_york/3b": {
+    "first_seen": "2026-02-11T04:39:21.735147+00:00",
+    "address": "51 Leroy Street #3B",
+    "price": "$2,960"
+  },
+  "https://streeteasy.com/building/37-cornelia-street/3c": {
+    "first_seen": "2026-02-11T04:39:21.735175+00:00",
+    "address": "257 Bleecker Street #3C",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/17-gay-street-new_york/6": {
+    "first_seen": "2026-02-11T04:39:21.735207+00:00",
+    "address": "17 Gay Street #6",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/634-hudson-street-new_york/rr5": {
+    "first_seen": "2026-02-11T04:39:21.735256+00:00",
+    "address": "634 Hudson Street #RR5",
+    "price": "$2,850"
+  },
+  "https://streeteasy.com/building/87-christopher-street-new_york/17": {
+    "first_seen": "2026-02-11T04:39:21.735305+00:00",
+    "address": "87 Christopher Street #17",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/236-west-10-street-new_york/17": {
+    "first_seen": "2026-02-11T04:39:21.735351+00:00",
+    "address": "236 West 10th Street #17",
+    "price": "$2,870"
+  },
+  "https://streeteasy.com/building/316-west-14-street-new_york/16": {
+    "first_seen": "2026-02-11T04:39:21.735397+00:00",
+    "address": "316 West 14th Street #16",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/53-leroy-street-new_york/1a": {
+    "first_seen": "2026-02-11T04:39:21.735442+00:00",
+    "address": "53 Leroy Street #1A",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/the-carteret/903": {
+    "first_seen": "2026-02-11T04:39:26.231475+00:00",
+    "address": "208 West 23rd Street #903",
+    "price": "$3,600"
+  },
+  "https://streeteasy.com/building/402-west-22-street-new_york/2r": {
+    "first_seen": "2026-02-11T04:39:26.231570+00:00",
+    "address": "402 West 22nd Street #2R",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/220-west-24-street-new_york/2201k": {
+    "first_seen": "2026-02-11T04:39:26.231624+00:00",
+    "address": "220 West 24th Street #2201K",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/335-west-29-street-new_york/1o": {
+    "first_seen": "2026-02-11T04:39:26.231673+00:00",
+    "address": "335 West 29th Street #1O",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/246-west-22-street-new_york/12a": {
+    "first_seen": "2026-02-11T04:39:26.231721+00:00",
+    "address": "246 West 22nd Street #12A",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/206-west-21-street-new_york/c2": {
+    "first_seen": "2026-02-11T04:39:26.231769+00:00",
+    "address": "206 West 21st Street #C2",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/225-west-25-street-new_york/3b": {
+    "first_seen": "2026-02-11T04:39:26.231816+00:00",
+    "address": "225 West 25th Street #3B",
+    "price": "$3,600"
+  },
+  "https://streeteasy.com/building/111-west-16-street-new_york/1l": {
+    "first_seen": "2026-02-11T04:39:26.231865+00:00",
+    "address": "111 West 16th Street #1L",
+    "price": "$3,499"
+  },
+  "https://streeteasy.com/building/456-west-22-street-new_york/3b": {
+    "first_seen": "2026-02-11T04:39:26.231912+00:00",
+    "address": "456 West 22nd Street #3B",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/226-west-25-street-new_york/5rw": {
+    "first_seen": "2026-02-11T04:39:26.231960+00:00",
+    "address": "226 West 25th Street #5RW",
+    "price": "$3,485"
+  },
+  "https://streeteasy.com/building/309-west-21-street-new_york/4d": {
+    "first_seen": "2026-02-11T04:39:26.232007+00:00",
+    "address": "309 West 21st Street #4D",
+    "price": "$2,825"
+  },
+  "https://streeteasy.com/building/230-west-24-street-new_york/1g": {
+    "first_seen": "2026-02-11T04:39:26.232054+00:00",
+    "address": "230 West 24th Street #1G",
+    "price": "$2,800"
+  },
+  "https://streeteasy.com/building/327-west-18-street-new_york/3": {
+    "first_seen": "2026-02-11T04:39:26.232106+00:00",
+    "address": "327 West 18th Street #3",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/220-west-104-street-new_york/3e": {
+    "first_seen": "2026-02-11T04:39:37.709646+00:00",
+    "address": "220 West 104th Street #3E",
+    "price": "$3,050"
+  },
+  "https://streeteasy.com/building/102-west-80-street-new_york/17": {
+    "first_seen": "2026-02-11T04:39:37.709708+00:00",
+    "address": "102 West 80th Street #17",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/the-greystone/539": {
+    "first_seen": "2026-02-11T04:39:37.709757+00:00",
+    "address": "212 West 91st Street #539",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/the-greystone/338": {
+    "first_seen": "2026-02-11T04:39:37.709804+00:00",
+    "address": "212 West 91st Street #338",
+    "price": "$3,395"
+  },
+  "https://streeteasy.com/building/266-west-96th/0508": {
+    "first_seen": "2026-02-11T04:39:37.709850+00:00",
+    "address": "266 West 96th Street #508",
+    "price": "$3,490"
+  },
+  "https://streeteasy.com/building/the-greystone/607": {
+    "first_seen": "2026-02-11T04:39:37.709895+00:00",
+    "address": "212 West 91st Street #607",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/908-amsterdam-avenue-new_york/2c": {
+    "first_seen": "2026-02-11T04:39:37.709939+00:00",
+    "address": "908 Amsterdam Avenue #2C",
+    "price": "$3,050"
+  },
+  "https://streeteasy.com/building/42-west-69-street-new_york/3": {
+    "first_seen": "2026-02-11T04:39:37.709984+00:00",
+    "address": "42 West 69th Street #3",
+    "price": "$2,900"
+  },
+  "https://streeteasy.com/building/266-west-96th/0608": {
+    "first_seen": "2026-02-11T04:39:37.710028+00:00",
+    "address": "266 West 96th Street #608",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/313-west-91-street-new_york/4b": {
+    "first_seen": "2026-02-11T04:39:37.710074+00:00",
+    "address": "313 West 91st Street #4B",
+    "price": "$3,595"
+  },
+  "https://streeteasy.com/building/south-pierre/15a": {
+    "first_seen": "2026-02-11T04:39:37.710118+00:00",
+    "address": "160 West 71st Street #15A",
+    "price": "$2,975"
+  },
+  "https://streeteasy.com/building/parc-coliseum/15i": {
+    "first_seen": "2026-02-11T04:39:37.710164+00:00",
+    "address": "228 West 71st Street #15I",
+    "price": "$3,383"
+  },
+  "https://streeteasy.com/building/110-west-90-street-new_york/2l": {
+    "first_seen": "2026-02-11T04:39:37.710209+00:00",
+    "address": "110 West 90th Street #2L",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/parc-77/05a": {
+    "first_seen": "2026-02-11T04:39:37.710255+00:00",
+    "address": "50 West 77th Street #5A",
+    "price": "$3,159"
+  },
+  "https://streeteasy.com/building/windermere-666-west-end-avenue-new_york/18w": {
+    "first_seen": "2026-02-11T04:39:37.710300+00:00",
+    "address": "666 West End Avenue #18W",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/parc-cameron/08b": {
+    "first_seen": "2026-02-11T04:39:37.710346+00:00",
+    "address": "41 West 86th Street #8B",
+    "price": "$2,824"
+  },
+  "https://streeteasy.com/building/953-columbus-avenue-new_york/1s": {
+    "first_seen": "2026-02-11T04:39:37.710391+00:00",
+    "address": "953 Columbus Avenue #1S",
+    "price": "$2,900"
+  },
+  "https://streeteasy.com/building/parc-cameron/07c": {
+    "first_seen": "2026-02-11T04:39:37.710437+00:00",
+    "address": "41 West 86th Street #7C",
+    "price": "$3,108"
+  },
+  "https://streeteasy.com/building/784-columbus-avenue-new_york/14s": {
+    "first_seen": "2026-02-11T04:39:37.710481+00:00",
+    "address": "784 Columbus Avenue #14S",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/214-west-96-street-new_york/4g": {
+    "first_seen": "2026-02-11T04:39:37.710580+00:00",
+    "address": "214 West 96th Street #4G",
+    "price": "$3,195"
+  },
+  "https://streeteasy.com/building/west-pierre/1510": {
+    "first_seen": "2026-02-11T04:39:37.710634+00:00",
+    "address": "253 West 72nd Street #1510",
+    "price": "$3,475"
+  },
+  "https://streeteasy.com/building/792-columbus-avenue-new_york/4b": {
+    "first_seen": "2026-02-11T04:39:37.710680+00:00",
+    "address": "792 Columbus Avenue #4B",
+    "price": "$3,195"
+  },
+  "https://streeteasy.com/building/parc-77/02m": {
+    "first_seen": "2026-02-11T04:39:37.710725+00:00",
+    "address": "50 West 77th Street #2M",
+    "price": "$3,288"
+  },
+  "https://streeteasy.com/building/parc-cameron/06j": {
+    "first_seen": "2026-02-11T04:39:37.710769+00:00",
+    "address": "41 West 86th Street #6J",
+    "price": "$2,604"
+  },
+  "https://streeteasy.com/building/parc-cameron/07h": {
+    "first_seen": "2026-02-11T04:39:37.710813+00:00",
+    "address": "41 West 86th Street #7H",
+    "price": "$2,841"
+  },
+  "https://streeteasy.com/building/parc-cameron/07b": {
+    "first_seen": "2026-02-11T04:39:37.710857+00:00",
+    "address": "41 West 86th Street #7B",
+    "price": "$2,664"
+  },
+  "https://streeteasy.com/building/parc-coliseum/14i": {
+    "first_seen": "2026-02-11T04:39:37.710899+00:00",
+    "address": "228 West 71st Street #14I",
+    "price": "$3,436"
+  },
+  "https://streeteasy.com/building/parc-cameron/12b": {
+    "first_seen": "2026-02-11T04:39:37.710944+00:00",
+    "address": "41 West 86th Street #12B",
+    "price": "$3,089"
+  },
+  "https://streeteasy.com/building/stonehenge-70/0214": {
+    "first_seen": "2026-02-11T04:39:37.710988+00:00",
+    "address": "210 West 70th Street #214",
+    "price": "$3,595"
+  },
+  "https://streeteasy.com/building/644-amsterdam-avenue-new_york/4a": {
+    "first_seen": "2026-02-11T04:39:37.711032+00:00",
+    "address": "644 Amsterdam Avenue #4A",
+    "price": "$3,150"
+  },
+  "https://streeteasy.com/building/318-west-106-street-new_york/1re": {
+    "first_seen": "2026-02-11T04:39:37.711075+00:00",
+    "address": "318 West 106th Street #1RE",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/303-west-106-street-new_york/12": {
+    "first_seen": "2026-02-11T04:39:37.711119+00:00",
+    "address": "303 West 106th Street #12",
+    "price": "$3,195"
+  },
+  "https://streeteasy.com/building/the-gloucester/16s": {
+    "first_seen": "2026-02-11T04:39:37.711162+00:00",
+    "address": "200 West 79th Street #16S",
+    "price": "$3,395"
+  },
+  "https://streeteasy.com/building/205-west-91-street-new_york/2c": {
+    "first_seen": "2026-02-11T04:39:37.711207+00:00",
+    "address": "205 West 91st Street #2C",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/491-columbus-avenue-new_york/2c": {
+    "first_seen": "2026-02-11T04:39:37.711250+00:00",
+    "address": "491 Columbus Avenue #2C",
+    "price": "$2,800"
+  },
+  "https://streeteasy.com/building/963-columbus-avenue-new_york/3a": {
+    "first_seen": "2026-02-11T04:39:37.711294+00:00",
+    "address": "963 Columbus Avenue #3A",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/166-west-83-street-new_york/3d": {
+    "first_seen": "2026-02-11T04:39:37.711338+00:00",
+    "address": "166 West 83rd Street #3D",
+    "price": "$3,550"
+  },
+  "https://streeteasy.com/building/252-west-91-street-new_york/56": {
+    "first_seen": "2026-02-11T04:39:37.711382+00:00",
+    "address": "252 West 91st Street #56",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/850-amsterdam-avenue-new_york/3e": {
+    "first_seen": "2026-02-11T04:39:37.711426+00:00",
+    "address": "850 Amsterdam Avenue #3E",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/bel-canto-condominium/8c": {
+    "first_seen": "2026-02-11T04:39:37.711471+00:00",
+    "address": "1991 Broadway #8C",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/108-west-81-street-new_york/3r": {
+    "first_seen": "2026-02-11T04:39:37.711529+00:00",
+    "address": "108 West 81st Street #3R",
+    "price": "$2,895"
+  },
+  "https://streeteasy.com/building/102-west-80-street-new_york/42": {
+    "first_seen": "2026-02-11T04:39:37.711572+00:00",
+    "address": "102 West 80th Street #42",
+    "price": "$3,550"
+  },
+  "https://streeteasy.com/building/943-columbus-avenue-new_york/4b": {
+    "first_seen": "2026-02-11T04:39:37.711616+00:00",
+    "address": "943 Columbus Avenue #4B",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/328-west-85-street-new_york/4g": {
+    "first_seen": "2026-02-11T04:39:37.711660+00:00",
+    "address": "330 West 85th Street #4G",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/104-west-80-street-new_york/8": {
+    "first_seen": "2026-02-11T04:39:37.711705+00:00",
+    "address": "104 West 80th Street #8",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/794-amsterdam-avenue-new_york/3s": {
+    "first_seen": "2026-02-11T04:39:37.711750+00:00",
+    "address": "200 West 99th Street #3S",
+    "price": "$3,095"
+  },
+  "https://streeteasy.com/building/101-west-77-street-new_york/4a": {
+    "first_seen": "2026-02-11T04:39:37.711793+00:00",
+    "address": "101 West 77th Street #4A",
+    "price": "$3,600"
+  },
+  "https://streeteasy.com/building/226-west-97-street-new_york/6d": {
+    "first_seen": "2026-02-11T04:39:37.711839+00:00",
+    "address": "226 West 97th Street #6D",
+    "price": "$2,850"
+  },
+  "https://streeteasy.com/building/134-west-109-street-new_york/5e": {
+    "first_seen": "2026-02-11T04:39:37.711882+00:00",
+    "address": "134 West 109th Street #5E",
+    "price": "$2,650"
+  },
+  "https://streeteasy.com/building/698-amsterdam-avenue-new_york/2s": {
+    "first_seen": "2026-02-11T04:39:37.711926+00:00",
+    "address": "698 Amsterdam Avenue #2S",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/315-west-105-street-new_york/2r": {
+    "first_seen": "2026-02-11T04:39:37.711970+00:00",
+    "address": "315 West 105th Street #2R",
+    "price": "$2,495"
+  },
+  "https://streeteasy.com/building/78-west-85-street-new_york/5c": {
+    "first_seen": "2026-02-11T04:39:37.712014+00:00",
+    "address": "78 West 85th Street #5C",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/125-west-81-street-new_york/4a": {
+    "first_seen": "2026-02-11T04:39:37.712058+00:00",
+    "address": "125 West 81st Street #4A",
+    "price": "$3,075"
+  }
+}
