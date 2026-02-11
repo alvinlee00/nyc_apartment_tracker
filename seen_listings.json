@@ -933,5 +933,65 @@
     "first_seen": "2026-02-11T08:36:20.225473+00:00",
     "address": "8 West 90th Street #7",
     "price": "$3,500"
+  },
+  "https://streeteasy.com/building/107-west-69-street-new_york/1c": {
+    "first_seen": "2026-02-11T09:35:12.152140+00:00",
+    "address": "107 West 69th Street #1C",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/302-west-92-street-new_york/8p": {
+    "first_seen": "2026-02-11T09:35:13.342843+00:00",
+    "address": "304 West 92nd Street #8P",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/savannah-250-west-89-street-new_york/10a": {
+    "first_seen": "2026-02-11T09:35:14.525203+00:00",
+    "address": "250 West 89th Street #10A",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/78-manhattan-avenue-new_york/k": {
+    "first_seen": "2026-02-11T09:35:15.710474+00:00",
+    "address": "78 Manhattan Avenue #K",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/274-west-71-street-new_york/3": {
+    "first_seen": "2026-02-11T09:35:16.883752+00:00",
+    "address": "274 West 71st Street #3",
+    "price": "$3,000"
+  },
+  "https://streeteasy.com/building/276-west-71-street-new_york/7": {
+    "first_seen": "2026-02-11T09:35:18.059945+00:00",
+    "address": "276 West 71st Street #7",
+    "price": "$2,850"
+  },
+  "https://streeteasy.com/building/858-west-end-avenue-house/5a": {
+    "first_seen": "2026-02-11T09:35:19.246554+00:00",
+    "address": "858 West End Avenue #5A",
+    "price": "$2,695"
+  },
+  "https://streeteasy.com/building/250-west-100-street-new_york/606": {
+    "first_seen": "2026-02-11T09:35:20.425276+00:00",
+    "address": "250 West 100th Street #606",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/66-west-106-street-new_york/4c": {
+    "first_seen": "2026-02-11T09:35:21.617339+00:00",
+    "address": "66 West 106th Street #4C",
+    "price": "$3,490"
+  },
+  "https://streeteasy.com/building/245-west-75-street-new_york/5a": {
+    "first_seen": "2026-02-11T09:35:22.819389+00:00",
+    "address": "245 West 75th Street #5A",
+    "price": "$2,875"
+  },
+  "https://streeteasy.com/building/186-west-80-street-new_york/5c": {
+    "first_seen": "2026-02-11T09:35:23.982569+00:00",
+    "address": "186 West 80th Street #5C",
+    "price": "$3,125"
+  },
+  "https://streeteasy.com/building/146-west-73-street-new_york/a": {
+    "first_seen": "2026-02-11T09:35:25.171686+00:00",
+    "address": "146 West 73rd Street #A",
+    "price": "$2,850"
   }
 }
