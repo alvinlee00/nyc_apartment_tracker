@@ -993,5 +993,45 @@
     "first_seen": "2026-02-11T09:35:25.171686+00:00",
     "address": "146 West 73rd Street #A",
     "price": "$2,850"
+  },
+  "https://streeteasy.com/building/740-west-end-avenue-new_york/115y": {
+    "first_seen": "2026-02-11T10:33:04.128239+00:00",
+    "address": "740 West End Avenue #115Y",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/300-west-110-street-new_york/19g": {
+    "first_seen": "2026-02-11T10:33:05.359271+00:00",
+    "address": "300 West 110th Street #19G",
+    "price": "$3,250"
+  },
+  "https://streeteasy.com/building/23-west-94-street-new_york/e": {
+    "first_seen": "2026-02-11T10:33:06.600291+00:00",
+    "address": "23 West 94th Street #E",
+    "price": "$3,590"
+  },
+  "https://streeteasy.com/building/135-west-96-street-new_york/5h": {
+    "first_seen": "2026-02-11T10:33:07.801301+00:00",
+    "address": "135 West 96th Street #5H",
+    "price": "$3,600"
+  },
+  "https://streeteasy.com/building/202-west-82-street-new_york/2a": {
+    "first_seen": "2026-02-11T10:33:08.964801+00:00",
+    "address": "202 West 82nd Street #2A",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/302-west-105-street-new_york/1c": {
+    "first_seen": "2026-02-11T10:33:10.212198+00:00",
+    "address": "302 West 105th Street #1C",
+    "price": "$2,400"
+  },
+  "https://streeteasy.com/building/302-west-105-street-new_york/4c": {
+    "first_seen": "2026-02-11T10:33:11.380545+00:00",
+    "address": "302 West 105th Street #4C",
+    "price": "$2,375"
+  },
+  "https://streeteasy.com/building/the-parker-house/2j": {
+    "first_seen": "2026-02-11T10:33:12.597438+00:00",
+    "address": "82 West 105th Street #2J",
+    "price": "$2,695"
   }
 }
