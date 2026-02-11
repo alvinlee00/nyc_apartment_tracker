@@ -1033,5 +1033,35 @@
     "first_seen": "2026-02-11T10:33:12.597438+00:00",
     "address": "82 West 105th Street #2J",
     "price": "$2,695"
+  },
+  "https://streeteasy.com/building/788-columbus-avenue-new_york/9k": {
+    "first_seen": "2026-02-11T11:30:26.227815+00:00",
+    "address": "788 Columbus Avenue #9K",
+    "price": "$3,270"
+  },
+  "https://streeteasy.com/building/50-west-93-street-new_york/5008r": {
+    "first_seen": "2026-02-11T11:30:27.422855+00:00",
+    "address": "50 West 93rd Street #508R",
+    "price": "$3,475"
+  },
+  "https://streeteasy.com/building/64-west-85-street-new_york/a": {
+    "first_seen": "2026-02-11T11:30:28.588788+00:00",
+    "address": "64 West 85th Street #A",
+    "price": "$3,500"
+  },
+  "https://streeteasy.com/building/123-west-95-street-new_york/b": {
+    "first_seen": "2026-02-11T11:30:29.770858+00:00",
+    "address": "123 West 95th Street #B",
+    "price": "$3,199"
+  },
+  "https://streeteasy.com/building/914-columbus-avenue-new_york/d6": {
+    "first_seen": "2026-02-11T11:30:30.950340+00:00",
+    "address": "100 West 105th Street #D6",
+    "price": "$2,700"
+  },
+  "https://streeteasy.com/building/471-central-park-west-new_york/5a": {
+    "first_seen": "2026-02-11T11:30:32.260056+00:00",
+    "address": "471 Central Park West #5A",
+    "price": "$3,500"
   }
 }
