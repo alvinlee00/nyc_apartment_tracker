@@ -326,21 +326,26 @@ def scrape_neighborhood(session: ScraperSession, neighborhood: str, config: dict
             continue
         filtered.append(listing)
 
-    # Filter out sponsored listings from unrelated neighborhoods
+    # Filter out sponsored listings from unrelated neighborhoods.
+    # Listings with empty neighborhood are also rejected — they're likely sponsored
+    # placements where StreetEasy doesn't show the standard neighborhood label.
     allowed = NEIGHBORHOOD_ALIASES.get(neighborhood)
     if allowed:
         before_count = len(filtered)
-        filtered = [
-            l for l in filtered
-            if not l["neighborhood"] or l["neighborhood"] in allowed
-        ]
+        kept = []
+        for l in filtered:
+            if l["neighborhood"] in allowed:
+                kept.append(l)
+            else:
+                log.debug("  Rejected: %s — neighborhood '%s' not in %s",
+                          l["address"], l["neighborhood"], neighborhood)
+        filtered = kept
         removed = before_count - len(filtered)
         if removed:
-            log.info("  Filtered %d sponsored listing(s) from other neighborhoods", removed)
+            log.info("  Filtered %d sponsored/unrelated listing(s)", removed)
 
-    if len(raw_listings) != len(filtered):
-        log.info("  %s: %d raw → %d unique → %d after filters",
-                 neighborhood, len(raw_listings), len(unique_listings), len(filtered))
+    log.info("  %s: %d raw → %d unique → %d after filters",
+             neighborhood, len(raw_listings), len(unique_listings), len(filtered))
 
     return filtered
 
