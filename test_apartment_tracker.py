@@ -1,7 +1,9 @@
 """Tests for apartment_tracker.py — filtering, parsing, and core logic."""
 
 import json
+import os
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -521,45 +523,71 @@ class TestFormatCrossStreets:
 
 
 # ---------------------------------------------------------------------------
-# fetch_cross_streets (Geoclient API)
+# geoclient_lookup (Geoclient API)
 # ---------------------------------------------------------------------------
 
-class TestFetchCrossStreets:
-    def test_returns_formatted_cross_streets(self):
+class TestGeoclientLookup:
+    def test_returns_cross_streets_and_coordinates(self):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "address": {
                 "lowCrossStreetName1": "2 AVENUE",
                 "highCrossStreetName1": "1 AVENUE",
+                "latitude": 40.7357,
+                "longitude": -73.9823,
             }
         }
         mock_response.raise_for_status = MagicMock()
         with patch("apartment_tracker.requests.get", return_value=mock_response) as mock_get:
-            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
-            assert result == "between 2 Avenue & 1 Avenue"
+            result = at.geoclient_lookup("337 East 21st Street #3H", "fake-key")
+            assert result is not None
+            assert result["cross_streets"] == "between 2 Avenue & 1 Avenue"
+            assert result["latitude"] == 40.7357
+            assert result["longitude"] == -73.9823
             mock_get.assert_called_once()
             call_kwargs = mock_get.call_args
             assert call_kwargs[1]["params"]["houseNumber"] == "337"
             assert call_kwargs[1]["params"]["street"] == "East 21st Street"
 
-    def test_returns_none_on_missing_fields(self):
+    def test_returns_none_cross_streets_on_missing_fields(self):
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"address": {}}
+        mock_response.json.return_value = {
+            "address": {"latitude": 40.73, "longitude": -73.98}
+        }
         mock_response.raise_for_status = MagicMock()
         with patch("apartment_tracker.requests.get", return_value=mock_response):
-            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
-            assert result is None
+            result = at.geoclient_lookup("337 East 21st Street #3H", "fake-key")
+            assert result is not None
+            assert result["cross_streets"] is None
+            assert result["latitude"] == 40.73
 
     def test_returns_none_on_unparseable_address(self):
-        result = at.fetch_cross_streets("No Number Here", "fake-key")
+        result = at.geoclient_lookup("No Number Here", "fake-key")
         assert result is None
 
     def test_returns_none_on_api_error(self):
         with patch("apartment_tracker.requests.get", side_effect=at.requests.RequestException("timeout")):
-            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
+            result = at.geoclient_lookup("337 East 21st Street #3H", "fake-key")
             assert result is None
+
+    def test_handles_missing_coordinates(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "address": {
+                "lowCrossStreetName1": "BROADWAY",
+                "highCrossStreetName1": "5 AVENUE",
+            }
+        }
+        mock_response.raise_for_status = MagicMock()
+        with patch("apartment_tracker.requests.get", return_value=mock_response):
+            result = at.geoclient_lookup("200 West 23rd Street", "fake-key")
+            assert result is not None
+            assert result["cross_streets"] == "between Broadway & 5 Avenue"
+            assert result["latitude"] is None
+            assert result["longitude"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -604,3 +632,249 @@ class TestDiscordCrossStreets:
             fields = payload["embeds"][0]["fields"]
             cross_field = [f for f in fields if "Cross Streets" in f["name"]]
             assert len(cross_field) == 0
+
+    def test_embed_includes_subway_info(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+            "subway_info": "L at 1st Ave (0.2 mi)\n6 at Astor Pl (0.3 mi)",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, self.CONFIG)
+            payload = mock_post.call_args[1]["json"]
+            fields = payload["embeds"][0]["fields"]
+            subway_field = [f for f in fields if "Subway" in f["name"]]
+            assert len(subway_field) == 1
+            assert "L at 1st Ave" in subway_field[0]["value"]
+            assert subway_field[0]["inline"] is False
+
+
+# ---------------------------------------------------------------------------
+# Haversine distance
+# ---------------------------------------------------------------------------
+
+class TestHaversine:
+    def test_same_point_is_zero(self):
+        assert at._haversine(40.7128, -74.0060, 40.7128, -74.0060) == 0.0
+
+    def test_known_distance(self):
+        # Times Square to Empire State Building ~0.6 miles
+        dist = at._haversine(40.7580, -73.9855, 40.7484, -73.9857)
+        assert 0.5 < dist < 0.8
+
+    def test_short_distance(self):
+        # Two very close points in Manhattan
+        dist = at._haversine(40.7300, -73.9900, 40.7305, -73.9905)
+        assert dist < 0.1
+
+
+# ---------------------------------------------------------------------------
+# Subway station loading
+# ---------------------------------------------------------------------------
+
+class TestLoadSubwayStations:
+    def test_loads_real_data(self):
+        # Reset cache
+        at._subway_stations_cache = None
+        stations = at._load_subway_stations()
+        assert len(stations) > 100
+        # Check structure
+        first = stations[0]
+        assert "name" in first
+        assert "latitude" in first
+        assert "longitude" in first
+        assert "routes" in first
+        assert isinstance(first["routes"], list)
+        # Reset cache for other tests
+        at._subway_stations_cache = None
+
+    def test_returns_empty_on_missing_file(self):
+        at._subway_stations_cache = None
+        with patch.object(at, "SUBWAY_DATA_PATH", Path("/nonexistent/path.json")):
+            stations = at._load_subway_stations()
+            assert stations == []
+        at._subway_stations_cache = None
+
+    def test_caches_after_first_call(self):
+        at._subway_stations_cache = None
+        stations1 = at._load_subway_stations()
+        stations2 = at._load_subway_stations()
+        assert stations1 is stations2
+        at._subway_stations_cache = None
+
+
+# ---------------------------------------------------------------------------
+# find_nearby_stations
+# ---------------------------------------------------------------------------
+
+class TestFindNearbyStations:
+    SAMPLE_STATIONS = [
+        {"name": "1st Ave", "latitude": 40.7307, "longitude": -73.9817, "routes": ["L"]},
+        {"name": "Astor Pl", "latitude": 40.7291, "longitude": -73.9910, "routes": ["6"]},
+        {"name": "Far Away Station", "latitude": 41.0, "longitude": -74.5, "routes": ["A"]},
+    ]
+
+    def test_finds_nearby_stations(self):
+        # Point near 1st Ave L station
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS)
+        assert len(results) >= 1
+        assert results[0]["name"] == "1st Ave"
+
+    def test_respects_max_miles(self):
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS, max_miles=0.01)
+        # Only very close stations should match
+        names = [r["name"] for r in results]
+        assert "Far Away Station" not in names
+
+    def test_respects_max_stations(self):
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS, max_stations=1, max_miles=1.0)
+        assert len(results) <= 1
+
+    def test_excludes_far_stations(self):
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS, max_miles=0.5)
+        names = [r["name"] for r in results]
+        assert "Far Away Station" not in names
+
+    def test_returns_empty_for_no_nearby(self):
+        results = at.find_nearby_stations(41.5, -74.5, self.SAMPLE_STATIONS, max_miles=0.5)
+        assert results == []
+
+    def test_results_sorted_by_distance(self):
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS, max_miles=1.0)
+        distances = [r["distance_mi"] for r in results]
+        assert distances == sorted(distances)
+
+    def test_result_structure(self):
+        results = at.find_nearby_stations(40.7310, -73.9820, self.SAMPLE_STATIONS, max_miles=1.0)
+        assert len(results) > 0
+        r = results[0]
+        assert "name" in r
+        assert "routes" in r
+        assert "distance_mi" in r
+        assert isinstance(r["distance_mi"], float)
+
+
+# ---------------------------------------------------------------------------
+# _format_subway_field
+# ---------------------------------------------------------------------------
+
+class TestFormatSubwayField:
+    def test_single_station(self):
+        stations = [{"name": "1st Ave", "routes": ["L"], "distance_mi": 0.2}]
+        result = at._format_subway_field(stations)
+        assert result == "L at 1st Ave (0.2 mi)"
+
+    def test_multiple_stations(self):
+        stations = [
+            {"name": "1st Ave", "routes": ["L"], "distance_mi": 0.2},
+            {"name": "Astor Pl", "routes": ["6"], "distance_mi": 0.3},
+        ]
+        result = at._format_subway_field(stations)
+        assert "L at 1st Ave (0.2 mi)" in result
+        assert "6 at Astor Pl (0.3 mi)" in result
+        assert "\n" in result
+
+    def test_multi_route_station(self):
+        stations = [{"name": "Union Sq", "routes": ["4", "5", "6", "L", "N", "Q", "R", "W"], "distance_mi": 0.1}]
+        result = at._format_subway_field(stations)
+        assert "4, 5, 6, L, N, Q, R, W at Union Sq (0.1 mi)" == result
+
+
+# ---------------------------------------------------------------------------
+# Daily digest
+# ---------------------------------------------------------------------------
+
+class TestDailyDigest:
+    CONFIG = {"discord": {"username": "Test Bot"}}
+
+    def test_send_discord_digest_success(self):
+        listings = [
+            {"url": "/a", "address": "Apt A", "price": "$3,000", "neighborhood": "East Village"},
+            {"url": "/b", "address": "Apt B", "price": "$3,500", "neighborhood": "East Village"},
+            {"url": "/c", "address": "Apt C", "price": "$2,800", "neighborhood": "Chelsea"},
+        ]
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            result = at.send_discord_digest("https://discord.com/webhook", listings, self.CONFIG)
+            assert result is True
+            payload = mock_post.call_args[1]["json"]
+            embed = payload["embeds"][0]
+            assert "Daily Digest" in embed["title"]
+            assert "3 new listing(s)" in embed["description"]
+            assert "East Village" in embed["description"]
+            assert "Chelsea" in embed["description"]
+            assert embed["color"] == 0x3498DB
+
+    def test_send_discord_digest_empty_listings(self):
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            result = at.send_discord_digest("https://discord.com/webhook", [], self.CONFIG)
+            assert result is True
+            payload = mock_post.call_args[1]["json"]
+            assert "0 new listing(s)" in payload["embeds"][0]["description"]
+
+    def test_run_digest_filters_recent(self):
+        now = datetime.now(timezone.utc)
+        recent = (now - timedelta(hours=6)).isoformat()
+        old = (now - timedelta(hours=30)).isoformat()
+        seen = {
+            "https://streeteasy.com/a": {
+                "first_seen": recent, "address": "Recent Apt",
+                "price": "$3,000", "neighborhood": "Chelsea",
+            },
+            "https://streeteasy.com/b": {
+                "first_seen": old, "address": "Old Apt",
+                "price": "$2,500", "neighborhood": "SoHo",
+            },
+        }
+        with patch.object(at, "load_config", return_value={"discord": {}}), \
+             patch.object(at, "load_seen", return_value=seen), \
+             patch.dict(os.environ, {"DISCORD_WEBHOOK_URL": "https://discord.com/webhook"}), \
+             patch("apartment_tracker.send_discord_digest") as mock_digest:
+            at.run_digest()
+            mock_digest.assert_called_once()
+            listings_arg = mock_digest.call_args[0][1]
+            assert len(listings_arg) == 1
+            assert listings_arg[0]["address"] == "Recent Apt"
+
+    def test_run_digest_skips_when_no_recent(self):
+        old = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat()
+        seen = {
+            "https://streeteasy.com/a": {
+                "first_seen": old, "address": "Old Apt",
+                "price": "$2,500", "neighborhood": "SoHo",
+            },
+        }
+        with patch.object(at, "load_config", return_value={"discord": {}}), \
+             patch.object(at, "load_seen", return_value=seen), \
+             patch.dict(os.environ, {"DISCORD_WEBHOOK_URL": "https://discord.com/webhook"}), \
+             patch("apartment_tracker.send_discord_digest") as mock_digest:
+            at.run_digest()
+            mock_digest.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# parse_args
+# ---------------------------------------------------------------------------
+
+class TestParseArgs:
+    def test_default_no_digest(self):
+        with patch("sys.argv", ["apartment_tracker.py"]):
+            args = at.parse_args()
+            assert args.digest is False
+
+    def test_digest_flag(self):
+        with patch("sys.argv", ["apartment_tracker.py", "--digest"]):
+            args = at.parse_args()
+            assert args.digest is True

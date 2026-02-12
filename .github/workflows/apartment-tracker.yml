@@ -2,12 +2,19 @@ name: NYC Apartment Tracker
 
 on:
   schedule:
-    # Run hourly 8 AM–11 PM Eastern (13:00–04:00 UTC)
-    - cron: '0 13-23,0-4 * * *'
+    # Scrape hourly 8 AM–10 PM Eastern (13:00–03:00 UTC)
+    - cron: '0 13-23,0-3 * * *'
+    # Daily digest at 11 PM Eastern (04:00 UTC)
+    - cron: '0 4 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
         description: 'Run without sending Discord notifications'
+        required: false
+        default: 'false'
+        type: boolean
+      digest:
+        description: 'Send daily digest instead of scraping'
         required: false
         default: 'false'
         type: boolean
@@ -19,6 +26,7 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.event.schedule != '0 4 * * *' && github.event.inputs.digest != 'true'
 
     steps:
       - name: Checkout repository
@@ -46,3 +54,26 @@ jobs:
           git add seen_listings.json
           git diff --staged --quiet || git commit -m "Update seen listings [skip ci]"
           git push
+
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.schedule == '0 4 * * *' || github.event.inputs.digest == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send daily digest
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python apartment_tracker.py --digest

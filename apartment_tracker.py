@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """NYC Apartment Tracker - Scrapes StreetEasy and sends Discord notifications."""
 
+import argparse
 import json
 import logging
+import math
 import os
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -377,8 +379,12 @@ def _format_cross_streets(low: str, high: str) -> str:
     return f"between {low_clean} & {high_clean}"
 
 
-def fetch_cross_streets(address: str, geoclient_key: str) -> str | None:
-    """Look up cross streets for a NYC address via the Geoclient API."""
+def geoclient_lookup(address: str, geoclient_key: str) -> dict | None:
+    """Look up cross streets and coordinates for a NYC address via the Geoclient API.
+
+    Returns {'cross_streets': str|None, 'latitude': float|None, 'longitude': float|None}
+    or None if the address can't be parsed.
+    """
     parsed = _parse_address_for_geoclient(address)
     if not parsed:
         log.debug("Could not parse address for Geoclient: %s", address)
@@ -398,14 +404,90 @@ def fetch_cross_streets(address: str, geoclient_key: str) -> str | None:
         )
         resp.raise_for_status()
         data = resp.json().get("address", {})
+
+        # Cross streets
         low = data.get("lowCrossStreetName1", "").strip()
         high = data.get("highCrossStreetName1", "").strip()
-        if low and high:
-            return _format_cross_streets(low, high)
-        return None
+        cross_streets = _format_cross_streets(low, high) if low and high else None
+
+        # Coordinates
+        lat = data.get("latitude")
+        lon = data.get("longitude")
+        latitude = float(lat) if lat is not None else None
+        longitude = float(lon) if lon is not None else None
+
+        return {
+            "cross_streets": cross_streets,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
     except requests.RequestException as e:
         log.warning("Geoclient API error for '%s': %s", address, e)
         return None
+
+
+# ---------------------------------------------------------------------------
+# Subway station proximity
+# ---------------------------------------------------------------------------
+
+SUBWAY_DATA_PATH = BASE_DIR / "data" / "subway_stations.json"
+_subway_stations_cache: list[dict] | None = None
+
+
+def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return the distance in miles between two lat/lon points."""
+    R = 3958.8  # Earth radius in miles
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
+         * math.sin(dlon / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _load_subway_stations() -> list[dict]:
+    """Load subway station data from JSON, caching after first call."""
+    global _subway_stations_cache
+    if _subway_stations_cache is not None:
+        return _subway_stations_cache
+    try:
+        with open(SUBWAY_DATA_PATH) as f:
+            _subway_stations_cache = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        log.warning("Could not load subway station data: %s", e)
+        _subway_stations_cache = []
+    return _subway_stations_cache
+
+
+def find_nearby_stations(
+    lat: float, lon: float, stations: list[dict],
+    max_stations: int = 3, max_miles: float = 0.5,
+) -> list[dict]:
+    """Find the closest subway stations within max_miles.
+
+    Returns up to max_stations results, each with keys:
+        name, routes, distance_mi
+    """
+    results = []
+    for s in stations:
+        dist = _haversine(lat, lon, s["latitude"], s["longitude"])
+        if dist <= max_miles:
+            results.append({
+                "name": s["name"],
+                "routes": s["routes"],
+                "distance_mi": round(dist, 2),
+            })
+    results.sort(key=lambda r: r["distance_mi"])
+    return results[:max_stations]
+
+
+def _format_subway_field(nearby_stations: list[dict]) -> str:
+    """Format nearby stations for a Discord embed field value."""
+    lines = []
+    for s in nearby_stations:
+        routes = ", ".join(s["routes"])
+        lines.append(f"{routes} at {s['name']} ({s['distance_mi']} mi)")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -436,6 +518,10 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
     ]
     if cross_streets:
         fields.append({"name": "🚦 Cross Streets", "value": cross_streets, "inline": True})
+
+    subway_info = listing.get("subway_info")
+    if subway_info:
+        fields.append({"name": "🚇 Nearby Subway", "value": subway_info, "inline": False})
 
     embed = {
         "title": f"🏠 {address}",
@@ -526,7 +612,8 @@ def send_discord_summary(webhook_url: str, new_listings: list[dict], config: dic
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def run_scraper():
+    """Main scraper flow — scrape StreetEasy and send Discord notifications."""
     log.info("=" * 60)
     log.info("NYC Apartment Tracker starting at %s", datetime.now(timezone.utc).isoformat())
     log.info("=" * 60)
@@ -586,17 +673,23 @@ def main():
                 "first_seen": datetime.now(timezone.utc).isoformat(),
                 "address": listing["address"],
                 "price": listing["price"],
+                "neighborhood": listing.get("neighborhood", ""),
             }
 
-            # Fetch cross streets and send notification for new, notifiable listings
+            # Geoclient lookup + subway proximity for new, notifiable listings
             if not is_first_run and webhook_url:
                 if geoclient_key:
                     try:
-                        cross_streets = fetch_cross_streets(listing["address"], geoclient_key)
-                        listing["cross_streets"] = cross_streets
+                        geo = geoclient_lookup(listing["address"], geoclient_key)
+                        if geo:
+                            listing["cross_streets"] = geo["cross_streets"]
+                            if geo["latitude"] and geo["longitude"]:
+                                stations = _load_subway_stations()
+                                nearby = find_nearby_stations(geo["latitude"], geo["longitude"], stations)
+                                if nearby:
+                                    listing["subway_info"] = _format_subway_field(nearby)
                     except Exception as e:
-                        log.warning("Failed to fetch cross streets for %s: %s", listing["address"], e)
-                        listing["cross_streets"] = None
+                        log.warning("Failed geoclient/subway lookup for %s: %s", listing["address"], e)
 
                 send_discord_notification(webhook_url, listing, config)
                 time.sleep(1)  # Rate-limit Discord messages
@@ -622,6 +715,106 @@ def main():
         with open(github_output, "a") as f:
             f.write(f"new_listings={new_count}\n")
             f.write(f"total_found={total_found}\n")
+
+
+def send_discord_digest(webhook_url: str, listings: list[dict], config: dict) -> bool:
+    """Send a daily digest embed summarizing listings found in the last 24 hours."""
+    discord_config = config.get("discord", {})
+
+    # Group by neighborhood
+    by_neighborhood: dict[str, list[dict]] = {}
+    for entry in listings:
+        hood = entry.get("neighborhood", "Unknown") or "Unknown"
+        by_neighborhood.setdefault(hood, []).append(entry)
+
+    # Build neighborhood summary lines
+    hood_lines = []
+    for hood in sorted(by_neighborhood, key=lambda h: -len(by_neighborhood[h])):
+        entries = by_neighborhood[hood]
+        prices = [parse_price(e.get("price", "")) for e in entries]
+        prices = [p for p in prices if p]
+        if prices:
+            price_str = f"${min(prices):,}–${max(prices):,}" if len(prices) > 1 else f"${prices[0]:,}"
+        else:
+            price_str = "N/A"
+        hood_lines.append(f"• **{hood}**: {len(entries)} listing(s) — {price_str}")
+
+    today_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
+    description = "\n".join(hood_lines) if hood_lines else "No new listings today."
+
+    embed = {
+        "title": f"\U0001f4ca Daily Digest \u2014 {today_str}",
+        "description": (
+            f"**{len(listings)} new listing(s)** found in the last 24 hours.\n\n"
+            f"{description}"
+        ),
+        "color": 0x3498DB,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "footer": {"text": "NYC Apartment Tracker \u2022 Daily Digest"},
+    }
+
+    payload = {
+        "username": discord_config.get("username", "NYC Apartment Tracker"),
+        "avatar_url": discord_config.get("avatar_url", ""),
+        "embeds": [embed],
+    }
+
+    try:
+        resp = requests.post(webhook_url, json=payload, timeout=10)
+        resp.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        log.error("Failed to send Discord digest: %s", e)
+        return False
+
+
+def run_digest():
+    """Daily digest — summarize listings found in the last 24 hours."""
+    log.info("=" * 60)
+    log.info("NYC Apartment Tracker — Daily Digest at %s", datetime.now(timezone.utc).isoformat())
+    log.info("=" * 60)
+
+    config = load_config()
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
+    if not webhook_url:
+        log.error("DISCORD_WEBHOOK_URL not set — cannot send digest")
+        return
+
+    seen = load_seen()
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+
+    recent = []
+    for url, entry in seen.items():
+        first_seen = entry.get("first_seen", "")
+        if first_seen >= cutoff:
+            recent.append({
+                "url": url,
+                "address": entry.get("address", "Unknown"),
+                "price": entry.get("price", "N/A"),
+                "neighborhood": entry.get("neighborhood", "Unknown"),
+            })
+
+    log.info("Found %d listings in the last 24 hours (out of %d total)", len(recent), len(seen))
+
+    if recent:
+        send_discord_digest(webhook_url, recent, config)
+        log.info("Sent daily digest with %d listings", len(recent))
+    else:
+        log.info("No new listings in the last 24 hours — skipping digest")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="NYC Apartment Tracker")
+    parser.add_argument("--digest", action="store_true", help="Send daily digest instead of scraping")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    if args.digest:
+        run_digest()
+    else:
+        run_scraper()
 
 
 if __name__ == "__main__":
