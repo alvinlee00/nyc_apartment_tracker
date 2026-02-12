@@ -1208,5 +1208,15 @@
     "first_seen": "2026-02-12T17:00:03.143876+00:00",
     "address": "531 East 6th Street #A2",
     "price": "$2,450"
+  },
+  "https://streeteasy.com/building/134-east-7-street-new_york/5g": {
+    "first_seen": "2026-02-12T19:49:48.455072+00:00",
+    "address": "140 East 7th Street #5G",
+    "price": "$3,200"
+  },
+  "https://streeteasy.com/building/110-bedford-street-new_york/1c": {
+    "first_seen": "2026-02-12T19:49:59.749135+00:00",
+    "address": "110 Bedford Street #1C",
+    "price": "$500"
   }
 }
