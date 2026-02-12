@@ -1093,5 +1093,75 @@
     "first_seen": "2026-02-11T13:15:12.688154+00:00",
     "address": "133 West 71st Street #2A",
     "price": "$3,045"
+  },
+  "https://streeteasy.com/building/206-east-25-street-new_york/3fw": {
+    "first_seen": "2026-02-12T03:10:29.726769+00:00",
+    "address": "206 East 25th Street #3FW",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/224-east-27-street-new_york/2c": {
+    "first_seen": "2026-02-12T03:10:31.094131+00:00",
+    "address": "224 East 27th Street #2C",
+    "price": "$2,595"
+  },
+  "https://streeteasy.com/building/228-east-26-street-new_york/basement": {
+    "first_seen": "2026-02-12T03:10:32.291992+00:00",
+    "address": "228 East 26th Street BASEMENT",
+    "price": "$2,250"
+  },
+  "https://streeteasy.com/building/382-3-avenue-new_york/3c": {
+    "first_seen": "2026-02-12T03:10:33.483580+00:00",
+    "address": "382 3rd Avenue #3C",
+    "price": "$3,495"
+  },
+  "https://streeteasy.com/building/220-east-24-street-new_york/1e": {
+    "first_seen": "2026-02-12T03:10:34.690064+00:00",
+    "address": "220 East 24th Street #1E",
+    "price": "$3,300"
+  },
+  "https://streeteasy.com/building/207-east-27th-street/7f": {
+    "first_seen": "2026-02-12T03:10:35.958051+00:00",
+    "address": "207 East 27th Street #7F",
+    "price": "$3,450"
+  },
+  "https://streeteasy.com/building/316-east-34-street-new_york/1a": {
+    "first_seen": "2026-02-12T03:10:37.129672+00:00",
+    "address": "316 East 34th Street #1A",
+    "price": "$2,750"
+  },
+  "https://streeteasy.com/building/185-east-3-street-new_york/1c": {
+    "first_seen": "2026-02-12T03:10:47.562477+00:00",
+    "address": "185 East 3rd Street #1C",
+    "price": "$3,295"
+  },
+  "https://streeteasy.com/building/32-east-7-street-new_york/4f": {
+    "first_seen": "2026-02-12T03:10:48.750499+00:00",
+    "address": "32 East 7th Street #4F",
+    "price": "$3,100"
+  },
+  "https://streeteasy.com/building/12-1-avenue-new_york/2a": {
+    "first_seen": "2026-02-12T03:10:49.956037+00:00",
+    "address": "76 East 1st Street #2A",
+    "price": "$3,499"
+  },
+  "https://streeteasy.com/building/59-east-7-street-new_york/9": {
+    "first_seen": "2026-02-12T03:10:51.248549+00:00",
+    "address": "59 East 7th Street #9",
+    "price": "$3,400"
+  },
+  "https://streeteasy.com/building/98-orchard-street-new_york/2a": {
+    "first_seen": "2026-02-12T03:10:56.974115+00:00",
+    "address": "98 Orchard Street #2A",
+    "price": "$3,395"
+  },
+  "https://streeteasy.com/building/16-jane-street-new_york/2e": {
+    "first_seen": "2026-02-12T03:11:02.810653+00:00",
+    "address": "16 Jane Street #2E",
+    "price": "$3,562"
+  },
+  "https://streeteasy.com/building/59_61-carmine-street-new_york/6f": {
+    "first_seen": "2026-02-12T03:11:03.990973+00:00",
+    "address": "59-61 Carmine Street #6F",
+    "price": "$3,130"
   }
 }
