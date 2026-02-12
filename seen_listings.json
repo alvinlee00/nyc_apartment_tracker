@@ -1163,5 +1163,10 @@
     "first_seen": "2026-02-12T03:11:03.990973+00:00",
     "address": "59-61 Carmine Street #6F",
     "price": "$3,130"
+  },
+  "https://streeteasy.com/building/172-5-avenue-new_york/3f": {
+    "first_seen": "2026-02-12T05:24:59.766326+00:00",
+    "address": "172 5th Avenue #3F",
+    "price": "$3,000"
   }
 }
