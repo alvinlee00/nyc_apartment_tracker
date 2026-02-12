@@ -3,7 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 from bs4 import BeautifulSoup
@@ -477,3 +477,167 @@ class TestNeighborhoodAliases:
             for a in aliases:
                 assert isinstance(a, str), f"Alias '{a}' for '{slug}' should be a string"
                 assert len(a) > 0, f"Empty alias found for '{slug}'"
+
+
+# ---------------------------------------------------------------------------
+# _looks_like_cross_streets
+# ---------------------------------------------------------------------------
+
+class TestLooksLikeCrossStreets:
+    def test_typical_between(self):
+        assert at._looks_like_cross_streets("between 1st Ave & 2nd Ave") is True
+
+    def test_near_pattern(self):
+        assert at._looks_like_cross_streets("near Broadway & 5th Street") is True
+
+    def test_corner_pattern(self):
+        assert at._looks_like_cross_streets("corner of Park Ave and 34th Street") is True
+
+    def test_no_street_word(self):
+        assert at._looks_like_cross_streets("between apples & oranges") is False
+
+    def test_no_indicator(self):
+        assert at._looks_like_cross_streets("123 Main Street") is False
+
+    def test_empty_string(self):
+        assert at._looks_like_cross_streets("") is False
+
+    def test_none(self):
+        assert at._looks_like_cross_streets(None) is False
+
+    def test_too_long(self):
+        assert at._looks_like_cross_streets("between Ave A & Ave B " + "x" * 200) is False
+
+
+# ---------------------------------------------------------------------------
+# _extract_cross_streets
+# ---------------------------------------------------------------------------
+
+class TestExtractCrossStreets:
+    def test_class_based_extraction(self):
+        html = """
+        <html><body>
+            <h1>337 East 21st Street #3H</h1>
+            <span class="building-subtitle">between 1st Ave & 2nd Ave</span>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        result = at._extract_cross_streets(soup)
+        assert result == "between 1st Ave & 2nd Ave"
+
+    def test_sibling_extraction(self):
+        html = """
+        <html><body>
+            <h1>200 East 10th Street</h1>
+            <p>between Ave A & Ave B</p>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        result = at._extract_cross_streets(soup)
+        assert result == "between Ave A & Ave B"
+
+    def test_regex_fallback(self):
+        html = """
+        <html><body>
+            <div>This listing is located between Park Ave and Madison Ave on the UES.</div>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        result = at._extract_cross_streets(soup)
+        assert result is not None
+        assert "Park Ave" in result
+        assert "Madison Ave" in result
+
+    def test_no_cross_streets(self):
+        html = "<html><body><h1>123 Main St</h1><p>Nice apartment</p></body></html>"
+        soup = BeautifulSoup(html, "lxml")
+        assert at._extract_cross_streets(soup) is None
+
+    def test_secondary_class_match(self):
+        html = """
+        <html><body>
+            <div class="detail-secondary-text">near Broadway & Houston Street</div>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        result = at._extract_cross_streets(soup)
+        assert result == "near Broadway & Houston Street"
+
+    def test_location_class_match(self):
+        html = """
+        <html><body>
+            <span class="listing-location-info">between 3rd Ave & Lexington Ave</span>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        result = at._extract_cross_streets(soup)
+        assert result == "between 3rd Ave & Lexington Ave"
+
+
+# ---------------------------------------------------------------------------
+# fetch_cross_streets
+# ---------------------------------------------------------------------------
+
+class TestFetchCrossStreets:
+    def test_returns_cross_streets_on_success(self):
+        html = """
+        <html><body>
+            <h1>100 East 7th Street</h1>
+            <span class="building-subtitle">between Ave A & 1st Ave</span>
+        </body></html>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        session = MagicMock()
+        session.fetch.return_value = soup
+        result = at.fetch_cross_streets(session, "https://streeteasy.com/building/test/1")
+        assert result == "between Ave A & 1st Ave"
+
+    def test_returns_none_on_fetch_failure(self):
+        session = MagicMock()
+        session.fetch.return_value = None
+        result = at.fetch_cross_streets(session, "https://streeteasy.com/building/test/1")
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Discord embed includes cross streets
+# ---------------------------------------------------------------------------
+
+class TestDiscordCrossStreets:
+    CONFIG = {"discord": {"username": "Test Bot"}}
+
+    def test_embed_includes_cross_streets(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+            "cross_streets": "between 1st Ave & 2nd Ave",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, self.CONFIG)
+            payload = mock_post.call_args[1]["json"]
+            fields = payload["embeds"][0]["fields"]
+            cross_field = [f for f in fields if "Cross Streets" in f["name"]]
+            assert len(cross_field) == 1
+            assert cross_field[0]["value"] == "between 1st Ave & 2nd Ave"
+
+    def test_embed_omits_cross_streets_when_none(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, self.CONFIG)
+            payload = mock_post.call_args[1]["json"]
+            fields = payload["embeds"][0]["fields"]
+            cross_field = [f for f in fields if "Cross Streets" in f["name"]]
+            assert len(cross_field) == 0

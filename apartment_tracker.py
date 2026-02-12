@@ -349,6 +349,69 @@ def scrape_neighborhood(session: ScraperSession, neighborhood: str, config: dict
 
     return filtered
 
+
+# ---------------------------------------------------------------------------
+# Cross street extraction from listing detail pages
+# ---------------------------------------------------------------------------
+
+def _looks_like_cross_streets(text: str) -> bool:
+    """Return True if *text* looks like a cross-street description.
+
+    Requires at least two street-type words (real cross streets reference two
+    streets) plus an indicator like "between", "&", etc.
+    """
+    if not text or len(text) > 120:
+        return False
+    lower = text.lower()
+    street_pattern = re.compile(
+        r"\b(?:street|avenue|ave|place|boulevard|blvd|road|drive|broadway)\b"
+        r"|(?<!\w)(?:st|pl|rd|dr)(?!\w)",
+        re.IGNORECASE,
+    )
+    indicators = ("between", "&", " and ", "near", "corner")
+    street_matches = street_pattern.findall(lower)
+    has_indicator = any(w in lower for w in indicators)
+    return len(street_matches) >= 2 and has_indicator
+
+
+def _extract_cross_streets(soup: BeautifulSoup) -> str | None:
+    """Try several strategies to pull cross-street text from a listing page."""
+    # Strategy 1: elements with suggestive class fragments near the address
+    for keyword in ("subtitle", "secondary", "cross", "location", "subheader"):
+        for el in soup.find_all(class_=lambda c: c and keyword in c.lower()):
+            text = el.get_text(strip=True)
+            if _looks_like_cross_streets(text):
+                return text
+
+    # Strategy 2: sibling of the <h1> address heading
+    h1 = soup.find("h1")
+    if h1:
+        for sibling in h1.find_next_siblings(limit=5):
+            text = sibling.get_text(strip=True)
+            if _looks_like_cross_streets(text):
+                return text
+
+    # Strategy 3: regex scan for common cross-street patterns
+    page_text = soup.get_text(" ", strip=True)
+    pattern = re.compile(
+        r"(?:between|near|corner of)\s+[\w.\s]+(?:&|and)\s+[\w.\s]+(?:Street|St|Avenue|Ave|Place|Pl|Boulevard|Blvd|Broadway)",
+        re.IGNORECASE,
+    )
+    m = pattern.search(page_text)
+    if m:
+        return m.group(0).strip()
+
+    return None
+
+
+def fetch_cross_streets(session: ScraperSession, listing_url: str) -> str | None:
+    """Fetch a listing detail page and return cross-street text, or None."""
+    soup = session.fetch(listing_url)
+    if not soup:
+        return None
+    return _extract_cross_streets(soup)
+
+
 # ---------------------------------------------------------------------------
 # Discord notifications
 # ---------------------------------------------------------------------------
@@ -366,17 +429,23 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
     url = listing["url"]
     image_url = listing.get("image_url", "")
 
+    cross_streets = listing.get("cross_streets")
+
+    fields = [
+        {"name": "💰 Price", "value": price, "inline": True},
+        {"name": "🛏️ Beds", "value": beds, "inline": True},
+        {"name": "🚿 Baths", "value": baths, "inline": True},
+        {"name": "📐 Size", "value": sqft, "inline": True},
+        {"name": "📍 Neighborhood", "value": neighborhood or "N/A", "inline": True},
+    ]
+    if cross_streets:
+        fields.append({"name": "🚦 Cross Streets", "value": cross_streets, "inline": True})
+
     embed = {
         "title": f"🏠 {address}",
         "url": url,
         "color": 0x00B4D8,
-        "fields": [
-            {"name": "💰 Price", "value": price, "inline": True},
-            {"name": "🛏️ Beds", "value": beds, "inline": True},
-            {"name": "🚿 Baths", "value": baths, "inline": True},
-            {"name": "📐 Size", "value": sqft, "inline": True},
-            {"name": "📍 Neighborhood", "value": neighborhood or "N/A", "inline": True},
-        ],
+        "fields": fields,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "footer": {"text": "NYC Apartment Tracker • StreetEasy"},
     }
@@ -516,8 +585,16 @@ def main():
                 "price": listing["price"],
             }
 
-            # Send individual notifications only on subsequent runs
+            # Fetch cross streets only for new, notifiable listings
             if not is_first_run and webhook_url:
+                try:
+                    time.sleep(delay)
+                    cross_streets = fetch_cross_streets(session, url)
+                    listing["cross_streets"] = cross_streets
+                except Exception as e:
+                    log.warning("Failed to fetch cross streets for %s: %s", url, e)
+                    listing["cross_streets"] = None
+
                 send_discord_notification(webhook_url, listing, config)
                 time.sleep(1)  # Rate-limit Discord messages
 
