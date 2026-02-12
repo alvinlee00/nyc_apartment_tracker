@@ -1230,5 +1230,11 @@
     "address": "225 East 10th Street #3B",
     "price": "$3,250",
     "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/249-east-2-street-new_york/2b": {
+    "first_seen": "2026-02-12T23:30:28.197371+00:00",
+    "address": "249 East 2nd Street #2B",
+    "price": "$2,600",
+    "neighborhood": "East Village"
   }
 }
