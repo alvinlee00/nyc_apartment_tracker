@@ -2,9 +2,8 @@ name: NYC Apartment Tracker
 
 on:
   schedule:
-    # Run twice daily: 8 AM and 8 PM Eastern (13:00 and 01:00 UTC)
-    - cron: '0 13 * * *'
-    - cron: '0 1 * * *'
+    # Run hourly 8 AM–11 PM Eastern (13:00–04:00 UTC)
+    - cron: '0 13-23,0-4 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
