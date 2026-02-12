@@ -1218,5 +1218,17 @@
     "first_seen": "2026-02-12T19:49:59.749135+00:00",
     "address": "110 Bedford Street #1C",
     "price": "$500"
+  },
+  "https://streeteasy.com/building/151-east-20-street-new_york/4g": {
+    "first_seen": "2026-02-12T22:33:50.403060+00:00",
+    "address": "151 East 20th Street #4G",
+    "price": "$3,000",
+    "neighborhood": "Gramercy Park"
+  },
+  "https://streeteasy.com/building/225-east-10-street-new_york/3b": {
+    "first_seen": "2026-02-12T22:34:12.433831+00:00",
+    "address": "225 East 10th Street #3B",
+    "price": "$3,250",
+    "neighborhood": "East Village"
   }
 }
