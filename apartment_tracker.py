@@ -428,10 +428,10 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
     cross_streets = listing.get("cross_streets")
 
     fields = [
-        {"name": "💰 Price", "value": price, "inline": True},
-        {"name": "🛏️ Beds", "value": beds, "inline": True},
-        {"name": "🚿 Baths", "value": baths, "inline": True},
-        {"name": "📐 Size", "value": sqft, "inline": True},
+        {"name": "💰 Price", "value": price or "N/A", "inline": True},
+        {"name": "🛏️ Beds", "value": beds or "N/A", "inline": True},
+        {"name": "🚿 Baths", "value": baths or "N/A", "inline": True},
+        {"name": "📐 Size", "value": sqft or "N/A", "inline": True},
         {"name": "📍 Neighborhood", "value": neighborhood or "N/A", "inline": True},
     ]
     if cross_streets:
@@ -446,7 +446,7 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
         "footer": {"text": "NYC Apartment Tracker • StreetEasy"},
     }
 
-    if image_url:
+    if image_url and image_url.startswith("http"):
         embed["image"] = {"url": image_url}
 
     payload = {
@@ -462,6 +462,8 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
             log.warning("Discord rate limit hit, waiting %.1fs", retry_after)
             time.sleep(retry_after)
             resp = requests.post(webhook_url, json=payload, timeout=10)
+        if resp.status_code == 400:
+            log.error("Discord 400 Bad Request for %s — response: %s", listing["address"], resp.text)
         resp.raise_for_status()
         return True
     except requests.RequestException as e:
