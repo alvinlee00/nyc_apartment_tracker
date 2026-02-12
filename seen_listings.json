@@ -1168,5 +1168,30 @@
     "first_seen": "2026-02-12T05:24:59.766326+00:00",
     "address": "172 5th Avenue #3F",
     "price": "$3,000"
+  },
+  "https://streeteasy.com/building/101-east-10th-street-new_york/7i": {
+    "first_seen": "2026-02-12T14:11:32.291440+00:00",
+    "address": "101 East 10th Street #7I",
+    "price": "$3,470"
+  },
+  "https://streeteasy.com/building/566-hudson-street-new_york/4": {
+    "first_seen": "2026-02-12T14:11:43.519318+00:00",
+    "address": "566 Hudson Street #4",
+    "price": "$3,520"
+  },
+  "https://streeteasy.com/building/209-west-21-street-new_york/2b": {
+    "first_seen": "2026-02-12T14:11:49.910060+00:00",
+    "address": "209 West 21st Street #2B",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/241-west-15-street-new_york/1rw": {
+    "first_seen": "2026-02-12T14:11:51.187034+00:00",
+    "address": "241 West 15th Street #1RW",
+    "price": "$2,995"
+  },
+  "https://streeteasy.com/building/434-west-19-street-new_york/1d": {
+    "first_seen": "2026-02-12T14:11:52.404046+00:00",
+    "address": "434 West 19th Street #1D",
+    "price": "$3,100"
   }
 }
