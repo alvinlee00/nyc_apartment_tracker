@@ -36,6 +36,7 @@ jobs:
       - name: Run apartment tracker
         env:
           DISCORD_WEBHOOK_URL: ${{ github.event.inputs.dry_run == 'true' && '' || secrets.DISCORD_WEBHOOK_URL }}
+          NYC_GEOCLIENT_KEY: ${{ secrets.NYC_GEOCLIENT_KEY }}
         run: python apartment_tracker.py
 
       - name: Commit updated seen listings

@@ -480,123 +480,86 @@ class TestNeighborhoodAliases:
 
 
 # ---------------------------------------------------------------------------
-# _looks_like_cross_streets
+# _parse_address_for_geoclient
 # ---------------------------------------------------------------------------
 
-class TestLooksLikeCrossStreets:
-    def test_typical_between(self):
-        assert at._looks_like_cross_streets("between 1st Ave & 2nd Ave") is True
+class TestParseAddressForGeoclient:
+    def test_standard_address(self):
+        result = at._parse_address_for_geoclient("337 East 21st Street #3H")
+        assert result == ("337", "East 21st Street")
 
-    def test_near_pattern(self):
-        assert at._looks_like_cross_streets("near Broadway & 5th Street") is True
+    def test_address_with_apt(self):
+        result = at._parse_address_for_geoclient("100 West 10th Street Apt 4B")
+        assert result == ("100", "West 10th Street")
 
-    def test_corner_pattern(self):
-        assert at._looks_like_cross_streets("corner of Park Ave and 34th Street") is True
+    def test_address_with_unit(self):
+        result = at._parse_address_for_geoclient("200 Broadway, Unit 5C")
+        assert result == ("200", "Broadway")
 
-    def test_no_street_word(self):
-        assert at._looks_like_cross_streets("between apples & oranges") is False
+    def test_address_no_unit(self):
+        result = at._parse_address_for_geoclient("45 Christopher Street")
+        assert result == ("45", "Christopher Street")
 
-    def test_no_indicator(self):
-        assert at._looks_like_cross_streets("123 Main Street") is False
+    def test_unparseable_address(self):
+        assert at._parse_address_for_geoclient("No Number Here") is None
 
     def test_empty_string(self):
-        assert at._looks_like_cross_streets("") is False
-
-    def test_none(self):
-        assert at._looks_like_cross_streets(None) is False
-
-    def test_too_long(self):
-        assert at._looks_like_cross_streets("between Ave A & Ave B " + "x" * 200) is False
+        assert at._parse_address_for_geoclient("") is None
 
 
 # ---------------------------------------------------------------------------
-# _extract_cross_streets
+# _format_cross_streets
 # ---------------------------------------------------------------------------
 
-class TestExtractCrossStreets:
-    def test_class_based_extraction(self):
-        html = """
-        <html><body>
-            <h1>337 East 21st Street #3H</h1>
-            <span class="building-subtitle">between 1st Ave & 2nd Ave</span>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        result = at._extract_cross_streets(soup)
-        assert result == "between 1st Ave & 2nd Ave"
+class TestFormatCrossStreets:
+    def test_basic_format(self):
+        assert at._format_cross_streets("1 AVENUE", "2 AVENUE") == "between 1 Avenue & 2 Avenue"
 
-    def test_sibling_extraction(self):
-        html = """
-        <html><body>
-            <h1>200 East 10th Street</h1>
-            <p>between Ave A & Ave B</p>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        result = at._extract_cross_streets(soup)
-        assert result == "between Ave A & Ave B"
-
-    def test_regex_fallback(self):
-        html = """
-        <html><body>
-            <div>This listing is located between Park Ave and Madison Ave on the UES.</div>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        result = at._extract_cross_streets(soup)
-        assert result is not None
-        assert "Park Ave" in result
-        assert "Madison Ave" in result
-
-    def test_no_cross_streets(self):
-        html = "<html><body><h1>123 Main St</h1><p>Nice apartment</p></body></html>"
-        soup = BeautifulSoup(html, "lxml")
-        assert at._extract_cross_streets(soup) is None
-
-    def test_secondary_class_match(self):
-        html = """
-        <html><body>
-            <div class="detail-secondary-text">near Broadway & Houston Street</div>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        result = at._extract_cross_streets(soup)
-        assert result == "near Broadway & Houston Street"
-
-    def test_location_class_match(self):
-        html = """
-        <html><body>
-            <span class="listing-location-info">between 3rd Ave & Lexington Ave</span>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        result = at._extract_cross_streets(soup)
-        assert result == "between 3rd Ave & Lexington Ave"
+    def test_titlecases_and_collapses_whitespace(self):
+        result = at._format_cross_streets("BROADWAY", "WEST   4 STREET")
+        assert result == "between Broadway & West 4 Street"
 
 
 # ---------------------------------------------------------------------------
-# fetch_cross_streets
+# fetch_cross_streets (Geoclient API)
 # ---------------------------------------------------------------------------
 
 class TestFetchCrossStreets:
-    def test_returns_cross_streets_on_success(self):
-        html = """
-        <html><body>
-            <h1>100 East 7th Street</h1>
-            <span class="building-subtitle">between Ave A & 1st Ave</span>
-        </body></html>
-        """
-        soup = BeautifulSoup(html, "lxml")
-        session = MagicMock()
-        session.fetch.return_value = soup
-        result = at.fetch_cross_streets(session, "https://streeteasy.com/building/test/1")
-        assert result == "between Ave A & 1st Ave"
+    def test_returns_formatted_cross_streets(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "address": {
+                "lowCrossStreetName1": "2 AVENUE",
+                "highCrossStreetName1": "1 AVENUE",
+            }
+        }
+        mock_response.raise_for_status = MagicMock()
+        with patch("apartment_tracker.requests.get", return_value=mock_response) as mock_get:
+            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
+            assert result == "between 2 Avenue & 1 Avenue"
+            mock_get.assert_called_once()
+            call_kwargs = mock_get.call_args
+            assert call_kwargs[1]["params"]["houseNumber"] == "337"
+            assert call_kwargs[1]["params"]["street"] == "East 21st Street"
 
-    def test_returns_none_on_fetch_failure(self):
-        session = MagicMock()
-        session.fetch.return_value = None
-        result = at.fetch_cross_streets(session, "https://streeteasy.com/building/test/1")
+    def test_returns_none_on_missing_fields(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"address": {}}
+        mock_response.raise_for_status = MagicMock()
+        with patch("apartment_tracker.requests.get", return_value=mock_response):
+            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
+            assert result is None
+
+    def test_returns_none_on_unparseable_address(self):
+        result = at.fetch_cross_streets("No Number Here", "fake-key")
         assert result is None
+
+    def test_returns_none_on_api_error(self):
+        with patch("apartment_tracker.requests.get", side_effect=at.requests.RequestException("timeout")):
+            result = at.fetch_cross_streets("337 East 21st Street #3H", "fake-key")
+            assert result is None
 
 
 # ---------------------------------------------------------------------------

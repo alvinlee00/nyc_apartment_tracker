@@ -351,65 +351,61 @@ def scrape_neighborhood(session: ScraperSession, neighborhood: str, config: dict
 
 
 # ---------------------------------------------------------------------------
-# Cross street extraction from listing detail pages
+# Cross street lookup via NYC Geoclient API
 # ---------------------------------------------------------------------------
 
-def _looks_like_cross_streets(text: str) -> bool:
-    """Return True if *text* looks like a cross-street description.
+GEOCLIENT_BASE = "https://api.nyc.gov/geoclient/v2/address"
 
-    Requires at least two street-type words (real cross streets reference two
-    streets) plus an indicator like "between", "&", etc.
+
+def _parse_address_for_geoclient(address: str) -> tuple[str, str] | None:
+    """Extract (house_number, street) from a StreetEasy address like '337 East 21st Street #3H'.
+
+    Returns None if the address can't be parsed.
     """
-    if not text or len(text) > 120:
-        return False
-    lower = text.lower()
-    street_pattern = re.compile(
-        r"\b(?:street|avenue|ave|place|boulevard|blvd|road|drive|broadway)\b"
-        r"|(?<!\w)(?:st|pl|rd|dr)(?!\w)",
-        re.IGNORECASE,
-    )
-    indicators = ("between", "&", " and ", "near", "corner")
-    street_matches = street_pattern.findall(lower)
-    has_indicator = any(w in lower for w in indicators)
-    return len(street_matches) >= 2 and has_indicator
-
-
-def _extract_cross_streets(soup: BeautifulSoup) -> str | None:
-    """Try several strategies to pull cross-street text from a listing page."""
-    # Strategy 1: elements with suggestive class fragments near the address
-    for keyword in ("subtitle", "secondary", "cross", "location", "subheader"):
-        for el in soup.find_all(class_=lambda c: c and keyword in c.lower()):
-            text = el.get_text(strip=True)
-            if _looks_like_cross_streets(text):
-                return text
-
-    # Strategy 2: sibling of the <h1> address heading
-    h1 = soup.find("h1")
-    if h1:
-        for sibling in h1.find_next_siblings(limit=5):
-            text = sibling.get_text(strip=True)
-            if _looks_like_cross_streets(text):
-                return text
-
-    # Strategy 3: regex scan for common cross-street patterns
-    page_text = soup.get_text(" ", strip=True)
-    pattern = re.compile(
-        r"(?:between|near|corner of)\s+[\w.\s]+(?:&|and)\s+[\w.\s]+(?:Street|St|Avenue|Ave|Place|Pl|Boulevard|Blvd|Broadway)",
-        re.IGNORECASE,
-    )
-    m = pattern.search(page_text)
-    if m:
-        return m.group(0).strip()
-
-    return None
-
-
-def fetch_cross_streets(session: ScraperSession, listing_url: str) -> str | None:
-    """Fetch a listing detail page and return cross-street text, or None."""
-    soup = session.fetch(listing_url)
-    if not soup:
+    # Strip unit/apt suffixes like "#3H", "Apt 4B", ", Unit 5"
+    cleaned = re.sub(r"[,\s]*(?:#|apt\.?|unit)\s*\S+$", "", address, flags=re.IGNORECASE).strip()
+    match = re.match(r"^(\d+[\w-]*)\s+(.+)$", cleaned)
+    if not match:
         return None
-    return _extract_cross_streets(soup)
+    return match.group(1), match.group(2)
+
+
+def _format_cross_streets(low: str, high: str) -> str:
+    """Format cross street names into a readable string."""
+    low_clean = " ".join(low.split()).title()
+    high_clean = " ".join(high.split()).title()
+    return f"between {low_clean} & {high_clean}"
+
+
+def fetch_cross_streets(address: str, geoclient_key: str) -> str | None:
+    """Look up cross streets for a NYC address via the Geoclient API."""
+    parsed = _parse_address_for_geoclient(address)
+    if not parsed:
+        log.debug("Could not parse address for Geoclient: %s", address)
+        return None
+
+    house_number, street = parsed
+    try:
+        resp = requests.get(
+            GEOCLIENT_BASE,
+            params={
+                "houseNumber": house_number,
+                "street": street,
+                "borough": "Manhattan",
+            },
+            headers={"Ocp-Apim-Subscription-Key": geoclient_key},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json().get("address", {})
+        low = data.get("lowCrossStreetName1", "").strip()
+        high = data.get("highCrossStreetName1", "").strip()
+        if low and high:
+            return _format_cross_streets(low, high)
+        return None
+    except requests.RequestException as e:
+        log.warning("Geoclient API error for '%s': %s", address, e)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -549,6 +545,11 @@ def main():
     if not webhook_url:
         log.warning("DISCORD_WEBHOOK_URL not set — will scrape but skip notifications")
 
+    # NYC Geoclient API key (for cross street lookups)
+    geoclient_key = os.environ.get("NYC_GEOCLIENT_KEY", "")
+    if not geoclient_key:
+        log.info("NYC_GEOCLIENT_KEY not set — cross streets will be omitted")
+
     # Detect first run (empty seen_listings.json)
     is_first_run = len(seen) == 0
 
@@ -585,15 +586,15 @@ def main():
                 "price": listing["price"],
             }
 
-            # Fetch cross streets only for new, notifiable listings
+            # Fetch cross streets and send notification for new, notifiable listings
             if not is_first_run and webhook_url:
-                try:
-                    time.sleep(delay)
-                    cross_streets = fetch_cross_streets(session, url)
-                    listing["cross_streets"] = cross_streets
-                except Exception as e:
-                    log.warning("Failed to fetch cross streets for %s: %s", url, e)
-                    listing["cross_streets"] = None
+                if geoclient_key:
+                    try:
+                        cross_streets = fetch_cross_streets(listing["address"], geoclient_key)
+                        listing["cross_streets"] = cross_streets
+                    except Exception as e:
+                        log.warning("Failed to fetch cross streets for %s: %s", listing["address"], e)
+                        listing["cross_streets"] = None
 
                 send_discord_notification(webhook_url, listing, config)
                 time.sleep(1)  # Rate-limit Discord messages
