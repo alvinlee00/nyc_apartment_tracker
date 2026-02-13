@@ -1260,5 +1260,11 @@
     "address": "160 West 16th Street #5H",
     "price": "$3,550",
     "neighborhood": "Chelsea"
+  },
+  "https://streeteasy.com/building/239-east-28-street-new_york/4b": {
+    "first_seen": "2026-02-13T14:02:51.407840+00:00",
+    "address": "239 East 28th Street #4B",
+    "price": "$2,750",
+    "neighborhood": "Kips Bay"
   }
 }
