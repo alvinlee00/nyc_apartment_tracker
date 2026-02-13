@@ -1278,5 +1278,17 @@
     "address": "35 Christopher Street #4B",
     "price": "$3,095",
     "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/28-west-26-street-new_york/2e": {
+    "first_seen": "2026-02-13T18:52:13.186560+00:00",
+    "address": "28 West 26th Street #2E",
+    "price": "$3,000",
+    "neighborhood": "NoMad"
+  },
+  "https://streeteasy.com/building/186-orchard-street-new_york/6rs": {
+    "first_seen": "2026-02-13T18:52:37.570960+00:00",
+    "address": "186 Orchard Street #6RS",
+    "price": "$3,400",
+    "neighborhood": "Lower East Side"
   }
 }
