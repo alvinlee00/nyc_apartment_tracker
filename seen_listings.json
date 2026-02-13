@@ -1314,5 +1314,11 @@
     "address": "65 Downing Street #4D",
     "price": "$3,295",
     "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/478-3-avenue-new_york/3b": {
+    "first_seen": "2026-02-13T23:31:32.839456+00:00",
+    "address": "478 3rd Avenue #3B",
+    "price": "$3,300",
+    "neighborhood": "Kips Bay"
   }
 }
