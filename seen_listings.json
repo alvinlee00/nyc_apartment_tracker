@@ -1290,5 +1290,17 @@
     "address": "186 Orchard Street #6RS",
     "price": "$3,400",
     "neighborhood": "Lower East Side"
+  },
+  "https://streeteasy.com/building/the-st-mark/5p": {
+    "first_seen": "2026-02-13T19:42:50.559798+00:00",
+    "address": "115 East 9th Street #5P",
+    "price": "$3,000",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/7-morton-street-new_york/19": {
+    "first_seen": "2026-02-13T19:42:59.529922+00:00",
+    "address": "7 Morton Street #19",
+    "price": "$3,500",
+    "neighborhood": "West Village"
   }
 }
