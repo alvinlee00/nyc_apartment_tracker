@@ -1302,5 +1302,17 @@
     "address": "7 Morton Street #19",
     "price": "$3,500",
     "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/333-east-6-street-new_york/3w": {
+    "first_seen": "2026-02-13T21:36:34.259771+00:00",
+    "address": "333 East 6th Street #3W",
+    "price": "$3,100",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/65-downing-street-new_york/4d": {
+    "first_seen": "2026-02-13T21:36:44.628273+00:00",
+    "address": "65 Downing Street #4D",
+    "price": "$3,295",
+    "neighborhood": "West Village"
   }
 }
