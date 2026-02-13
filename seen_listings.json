@@ -1236,5 +1236,29 @@
     "address": "249 East 2nd Street #2B",
     "price": "$2,600",
     "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/430-east-13-street-new_york/2r": {
+    "first_seen": "2026-02-13T02:24:30.591204+00:00",
+    "address": "430 East 13th Street #2R",
+    "price": "$2,495",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/99-st-marks-place-new_york/3d": {
+    "first_seen": "2026-02-13T02:24:31.822581+00:00",
+    "address": "99 Saint Marks Place #3D",
+    "price": "$3,400",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/108-charles-street-new_york/xt": {
+    "first_seen": "2026-02-13T02:24:42.041316+00:00",
+    "address": "108 Charles Street #XT",
+    "price": "$3,300",
+    "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/91-7-avenue-new_york/5h": {
+    "first_seen": "2026-02-13T02:24:47.610959+00:00",
+    "address": "160 West 16th Street #5H",
+    "price": "$3,550",
+    "neighborhood": "Chelsea"
   }
 }
