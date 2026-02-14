@@ -1350,5 +1350,11 @@
     "address": "312 West 20th Street #1A",
     "price": "$3,000",
     "neighborhood": "Chelsea"
+  },
+  "https://streeteasy.com/building/158-orchard-street-new_york/4c": {
+    "first_seen": "2026-02-14T16:31:36.732880+00:00",
+    "address": "158 Orchard Street #4C",
+    "price": "$2,750",
+    "neighborhood": "Lower East Side"
   }
 }
