@@ -1326,5 +1326,29 @@
     "address": "301 West 29th Street #6",
     "price": "$3,000",
     "neighborhood": "Chelsea"
+  },
+  "https://streeteasy.com/building/waterside-plaza/1028c": {
+    "first_seen": "2026-02-14T13:44:52.713320+00:00",
+    "address": "30 Waterside Plaza #1028C",
+    "price": "$3,408",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/421-east-9-street-new_york/b4": {
+    "first_seen": "2026-02-14T13:45:05.644372+00:00",
+    "address": "421 East 9th Street #B4",
+    "price": "$3,450",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/134-east-7-street-new_york/6c": {
+    "first_seen": "2026-02-14T13:45:07.025215+00:00",
+    "address": "140 East 7th Street #6C",
+    "price": "$3,050",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/312-west-20-street-new_york/1a": {
+    "first_seen": "2026-02-14T13:45:22.065472+00:00",
+    "address": "312 West 20th Street #1A",
+    "price": "$3,000",
+    "neighborhood": "Chelsea"
   }
 }
