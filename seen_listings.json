@@ -1356,5 +1356,11 @@
     "address": "158 Orchard Street #4C",
     "price": "$2,750",
     "neighborhood": "Lower East Side"
+  },
+  "https://streeteasy.com/building/340-east-5-street-new_york/a4": {
+    "first_seen": "2026-02-14T19:24:49.029612+00:00",
+    "address": "340 East 5th Street #A4",
+    "price": "$2,700",
+    "neighborhood": "East Village"
   }
 }
