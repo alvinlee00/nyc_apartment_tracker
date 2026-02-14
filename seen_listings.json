@@ -1320,5 +1320,11 @@
     "address": "478 3rd Avenue #3B",
     "price": "$3,300",
     "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/301-west-29-street-new_york/6": {
+    "first_seen": "2026-02-14T02:05:50.628751+00:00",
+    "address": "301 West 29th Street #6",
+    "price": "$3,000",
+    "neighborhood": "Chelsea"
   }
 }
