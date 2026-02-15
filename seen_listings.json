@@ -1368,5 +1368,17 @@
     "address": "35 West 15th Street #8A",
     "price": "$1,500",
     "neighborhood": "Flatiron"
+  },
+  "https://streeteasy.com/building/171-avenue-a-new_york/5c": {
+    "first_seen": "2026-02-15T15:26:55.129469+00:00",
+    "address": "171 Avenue A #5C",
+    "price": "$3,395",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/75-monroe-street-new_york/2c": {
+    "first_seen": "2026-02-15T15:27:01.834478+00:00",
+    "address": "56 Pike Street #2C",
+    "price": "$2,964",
+    "neighborhood": "Two Bridges"
   }
 }
