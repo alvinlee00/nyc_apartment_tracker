@@ -1380,5 +1380,11 @@
     "address": "56 Pike Street #2C",
     "price": "$2,964",
     "neighborhood": "Two Bridges"
+  },
+  "https://streeteasy.com/building/114-suffolk-street-new_york/5a": {
+    "first_seen": "2026-02-15T20:28:42.685392+00:00",
+    "address": "114 Suffolk Street #5A",
+    "price": "$2,900",
+    "neighborhood": "Lower East Side"
   }
 }
