@@ -1386,5 +1386,17 @@
     "address": "114 Suffolk Street #5A",
     "price": "$2,900",
     "neighborhood": "Lower East Side"
+  },
+  "https://streeteasy.com/building/stonehenge-33/5d": {
+    "first_seen": "2026-02-16T14:05:44.777216+00:00",
+    "address": "141 East 33rd Street #5D",
+    "price": "$3,300",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/490-2-avenue-new_york/12d": {
+    "first_seen": "2026-02-16T14:05:46.168763+00:00",
+    "address": "490 2nd Avenue #12D",
+    "price": "$3,410",
+    "neighborhood": "Kips Bay"
   }
 }
