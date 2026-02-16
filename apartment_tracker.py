@@ -123,6 +123,9 @@ def build_search_url(neighborhood: str, config: dict) -> str:
     beds_filter = f"beds:{beds_param}"
     filters = f"{price_filter}|{beds_filter}"
 
+    if search.get("no_fee"):
+        filters += "|no_fee:1"
+
     return f"{STREETEASY_BASE}/for-rent/{neighborhood}/{quote(filters, safe=':|-')}"
 
 
@@ -137,24 +140,25 @@ class ScraperSession:
     def close(self):
         self._session.close()
 
+    _HEADERS = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "max-age=0",
+        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"macOS"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+    }
+
     def fetch(self, url: str) -> BeautifulSoup | None:
         """Fetch URL with Chrome TLS fingerprint and return parsed soup."""
-        headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Cache-Control": "max-age=0",
-            "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"macOS"',
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Sec-Fetch-User": "?1",
-            "Upgrade-Insecure-Requests": "1",
-        }
         try:
-            resp = self._session.get(url, headers=headers, timeout=30)
+            resp = self._session.get(url, headers=self._HEADERS, timeout=30)
             if resp.status_code == 403:
                 log.warning("Got 403 for %s — may be rate-limited or blocked", url)
                 return None
@@ -165,6 +169,19 @@ class ScraperSession:
         except Exception as e:
             log.error("Failed to fetch %s: %s", url, e)
             return None
+
+    def fetch_with_status(self, url: str) -> tuple[BeautifulSoup | None, int | None]:
+        """Fetch URL and return (parsed_soup, http_status_code).
+        Returns (None, None) on network/connection errors.
+        """
+        try:
+            resp = self._session.get(url, headers=self._HEADERS, timeout=30)
+            if resp.status_code >= 400:
+                return None, resp.status_code
+            return BeautifulSoup(resp.text, "lxml"), resp.status_code
+        except Exception as e:
+            log.error("Failed to fetch %s: %s", url, e)
+            return None, None
 
 
 def get_session(config: dict) -> ScraperSession:
@@ -491,10 +508,326 @@ def _format_subway_field(nearby_stations: list[dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Google Maps URL
+# ---------------------------------------------------------------------------
+
+def is_within_geo_bounds(longitude: float | None, config: dict) -> bool:
+    """Check if a longitude falls within configured geo bounds.
+
+    Returns True if within bounds, no bounds configured, or no longitude provided.
+    """
+    if longitude is None:
+        return True
+    bounds = config.get("search", {}).get("geo_bounds")
+    if not bounds:
+        return True
+    west = bounds.get("west_longitude")
+    east = bounds.get("east_longitude")
+    if west is None or east is None:
+        return True
+    return west <= longitude <= east
+
+
+def build_google_maps_url(address: str) -> str:
+    """Build a Google Maps search URL for an NYC address."""
+    query = quote(f"{address}, New York, NY")
+    return f"https://www.google.com/maps/search/?api=1&query={query}"
+
+
+# ---------------------------------------------------------------------------
+# Listing staleness
+# ---------------------------------------------------------------------------
+
+def compute_days_on_market(first_seen_str: str | None) -> int | None:
+    """Compute the number of days since a listing was first seen."""
+    if not first_seen_str:
+        return None
+    try:
+        first_seen = datetime.fromisoformat(first_seen_str)
+        now = datetime.now(timezone.utc)
+        # Handle naive datetimes by assuming UTC
+        if first_seen.tzinfo is None:
+            first_seen = first_seen.replace(tzinfo=timezone.utc)
+        return (now - first_seen).days
+    except (ValueError, TypeError):
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Listing status check + stale cleanup
+# ---------------------------------------------------------------------------
+
+def check_listing_status(session: ScraperSession, url: str) -> str:
+    """Check if a StreetEasy listing is still active.
+    Returns 'active', 'gone', or 'unknown'.
+    """
+    soup, status = session.fetch_with_status(url)
+    if status is None:
+        return "unknown"      # network error
+    if status == 404:
+        return "gone"
+    if status == 403:
+        return "unknown"      # rate-limited, retry later
+    if status >= 400:
+        return "unknown"
+    # 200 OK — check page content
+    if soup:
+        text = soup.get_text(separator=" ", strip=True).lower()
+        if "no longer available" in text or "off market" in text:
+            return "gone"
+    return "active"
+
+
+def cleanup_stale_listings(
+    session: ScraperSession, seen: dict, config: dict,
+    geoclient_key: str, max_checks: int = 10,
+) -> int:
+    """Check stale listings and remove rented/gone ones. Returns count removed."""
+    now = datetime.now(timezone.utc)
+    stale_cutoff = now - timedelta(days=7)
+    delay = config.get("scraper", {}).get("request_delay_seconds", 2)
+
+    # Collect stale entries (missing last_scraped or older than 7 days)
+    stale = []
+    for url, entry in seen.items():
+        ls = entry.get("last_scraped")
+        if not ls:
+            stale.append((url, None))
+        else:
+            try:
+                ts = datetime.fromisoformat(ls)
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                if ts < stale_cutoff:
+                    stale.append((url, ts))
+            except (ValueError, TypeError):
+                stale.append((url, None))
+
+    # Sort by staleness (oldest / missing first — most likely gone)
+    stale.sort(key=lambda x: x[1] or datetime.min.replace(tzinfo=timezone.utc))
+
+    removed = 0
+    for i, (url, _) in enumerate(stale[:max_checks]):
+        if i > 0:
+            time.sleep(delay)
+
+        entry = seen.get(url)
+        if entry is None:
+            continue  # already removed by geo backfill below
+
+        # Geo backfill during cleanup if missing coordinates
+        if geoclient_key and "latitude" not in entry:
+            geo = geoclient_lookup(entry.get("address", ""), geoclient_key)
+            if geo and geo["latitude"] and geo["longitude"]:
+                entry["latitude"] = geo["latitude"]
+                entry["longitude"] = geo["longitude"]
+            if geo and not is_within_geo_bounds(geo.get("longitude"), config):
+                log.info("REMOVING (geo bounds during cleanup): %s", entry.get("address"))
+                del seen[url]
+                removed += 1
+                continue
+
+        status = check_listing_status(session, url)
+        if status == "gone":
+            log.info("REMOVING (rented/gone): %s — %s", entry.get("address", "?"), url)
+            del seen[url]
+            removed += 1
+        elif status == "active":
+            entry["last_scraped"] = now.isoformat()
+        # "unknown" → skip, try again next run
+
+    return removed
+
+
+# ---------------------------------------------------------------------------
+# Value score system
+# ---------------------------------------------------------------------------
+
+def _median(values: list[float]) -> float:
+    """Compute median of a sorted list of values."""
+    n = len(values)
+    if n == 0:
+        return 0.0
+    s = sorted(values)
+    mid = n // 2
+    if n % 2 == 0:
+        return (s[mid - 1] + s[mid]) / 2
+    return s[mid]
+
+
+def compute_neighborhood_medians(seen: dict) -> dict[str, float]:
+    """Compute median price per neighborhood from all tracked listings."""
+    prices_by_hood: dict[str, list[float]] = {}
+    for entry in seen.values():
+        hood = entry.get("neighborhood", "")
+        if not hood:
+            continue
+        price = parse_price(entry.get("price", ""))
+        if price is not None:
+            prices_by_hood.setdefault(hood, []).append(float(price))
+    return {hood: _median(prices) for hood, prices in prices_by_hood.items()}
+
+
+def compute_value_score(listing: dict, medians: dict[str, float],
+                        nearby_stations: list[dict] | None = None) -> dict | None:
+    """Compute a weighted value score (0-10) for a listing.
+
+    Components:
+      - Price vs neighborhood median (40%): below median = higher score
+      - Price per sqft (30%): lower $/sqft = higher score
+      - Subway proximity (30%): closer = higher score
+
+    Returns dict with score, grade, color, or None if price not parseable.
+    """
+    price = parse_price(listing.get("price", ""))
+    if price is None:
+        return None
+
+    # --- Price vs neighborhood median (40%) ---
+    hood = listing.get("neighborhood", "")
+    median = medians.get(hood)
+    if median and median > 0:
+        ratio = price / median
+        # ratio < 0.8 → 10, ratio = 1.0 → 5, ratio > 1.2 → 0
+        price_score = max(0, min(10, (1.2 - ratio) / 0.04))
+    else:
+        price_score = 5.0  # neutral if no median data
+
+    # --- Price per sqft (30%) ---
+    sqft_str = listing.get("sqft", "N/A")
+    sqft_match = re.search(r"([\d,]+)", sqft_str.replace(",", ""))
+    if sqft_match:
+        sqft_val = int(sqft_match.group(1))
+        if sqft_val > 0:
+            ppsf = price / sqft_val
+            # ppsf < $3 → 10, ppsf = $5 → 5, ppsf > $7 → 0
+            sqft_score = max(0, min(10, (7 - ppsf) / 0.4))
+        else:
+            sqft_score = 5.0
+    else:
+        sqft_score = 5.0  # neutral if no sqft data
+
+    # --- Subway proximity (30%) ---
+    if nearby_stations:
+        closest = nearby_stations[0]["distance_mi"]
+        # 0 mi → 10, 0.25 mi → 5, 0.5 mi → 0
+        subway_score = max(0, min(10, (0.5 - closest) / 0.05))
+    else:
+        subway_score = 5.0  # neutral if no subway data
+
+    score = round(price_score * 0.4 + sqft_score * 0.3 + subway_score * 0.3, 1)
+
+    # Letter grade
+    if score >= 8:
+        grade = "A"
+        color = 0x2ECC71  # Green
+    elif score >= 6:
+        grade = "B"
+        color = 0x27AE60  # Dark green
+    elif score >= 4:
+        grade = "C"
+        color = 0xF39C12  # Yellow/Orange
+    elif score >= 2:
+        grade = "D"
+        color = 0xE67E22  # Orange
+    else:
+        grade = "F"
+        color = 0xE74C3C  # Red
+
+    return {"score": score, "grade": grade, "color": color}
+
+
+# ---------------------------------------------------------------------------
+# Price drop detection
+# ---------------------------------------------------------------------------
+
+def detect_price_change(seen_entry: dict, current_price: int) -> dict | None:
+    """Compare stored price vs current price. Returns change info or None."""
+    old_price_str = seen_entry.get("price", "")
+    old_price = parse_price(old_price_str)
+    if old_price is None or current_price is None:
+        return None
+    if current_price >= old_price:
+        return None
+    savings = old_price - current_price
+    pct = round((savings / old_price) * 100, 1)
+    return {"old_price": old_price, "new_price": current_price, "savings": savings, "pct": pct}
+
+
+def update_price_history(seen_entry: dict, new_price: int) -> None:
+    """Append a price change to the seen entry's price_history list."""
+    if "price_history" not in seen_entry:
+        seen_entry["price_history"] = []
+    seen_entry["price_history"].append({
+        "price": new_price,
+        "date": datetime.now(timezone.utc).isoformat(),
+    })
+    seen_entry["price"] = f"${new_price:,}"
+
+
+def send_discord_price_drop(webhook_url: str, listing: dict, price_change: dict,
+                            config: dict, days_on_market: int | None = None) -> bool:
+    """Send an orange Discord embed for a price drop alert."""
+    discord_config = config.get("discord", {})
+    address = listing.get("address", "Unknown")
+    url = listing.get("url", "")
+    neighborhood = listing.get("neighborhood", "N/A")
+    old_price = price_change["old_price"]
+    new_price = price_change["new_price"]
+    savings = price_change["savings"]
+    pct = price_change["pct"]
+
+    fields = [
+        {"name": "💰 Price", "value": f"~~${old_price:,}~~ → **${new_price:,}**", "inline": True},
+        {"name": "💵 Savings", "value": f"${savings:,}/mo ({pct}% off)", "inline": True},
+        {"name": "📍 Neighborhood", "value": neighborhood, "inline": True},
+    ]
+
+    maps_url = build_google_maps_url(address)
+    fields.append({"name": "🗺️ Map", "value": f"[View on Google Maps]({maps_url})", "inline": True})
+
+    if days_on_market is not None:
+        dom_value = f"{days_on_market} days"
+        if days_on_market >= 30:
+            dom_value += " (may be negotiable!)"
+        fields.append({"name": "📅 Days Tracked", "value": dom_value, "inline": True})
+
+    embed = {
+        "title": f"📉 Price Drop! {address}",
+        "url": url,
+        "color": 0xFF8C00,  # Orange
+        "fields": fields,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "footer": {"text": "NYC Apartment Tracker • Price Drop"},
+    }
+
+    payload = {
+        "username": discord_config.get("username", "NYC Apartment Tracker"),
+        "avatar_url": discord_config.get("avatar_url", ""),
+        "embeds": [embed],
+    }
+
+    try:
+        resp = requests.post(webhook_url, json=payload, timeout=10)
+        if resp.status_code == 429:
+            retry_after = resp.json().get("retry_after", 5)
+            log.warning("Discord rate limit hit, waiting %.1fs", retry_after)
+            time.sleep(retry_after)
+            resp = requests.post(webhook_url, json=payload, timeout=10)
+        resp.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        log.error("Failed to send Discord price drop notification: %s", e)
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Discord notifications
 # ---------------------------------------------------------------------------
 
-def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> bool:
+def send_discord_notification(webhook_url: str, listing: dict, config: dict,
+                              days_on_market: int | None = None,
+                              value_score: dict | None = None) -> bool:
     """Send a Discord embed for a new listing."""
     discord_config = config.get("discord", {})
 
@@ -516,6 +849,10 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
         {"name": "📐 Size", "value": sqft or "N/A", "inline": True},
         {"name": "📍 Neighborhood", "value": neighborhood or "N/A", "inline": True},
     ]
+
+    maps_url = build_google_maps_url(address)
+    fields.append({"name": "🗺️ Map", "value": f"[View on Google Maps]({maps_url})", "inline": True})
+
     if cross_streets:
         fields.append({"name": "🚦 Cross Streets", "value": cross_streets, "inline": True})
 
@@ -523,10 +860,23 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict) -> 
     if subway_info:
         fields.append({"name": "🚇 Nearby Subway", "value": subway_info, "inline": False})
 
+    if days_on_market is not None:
+        dom_value = f"{days_on_market} days"
+        if days_on_market >= 30:
+            dom_value += " (may be negotiable!)"
+        fields.append({"name": "📅 Days Tracked", "value": dom_value, "inline": True})
+
+    embed_color = 0x00B4D8
+    if value_score is not None:
+        score = value_score["score"]
+        grade = value_score["grade"]
+        fields.append({"name": "📊 Value Score", "value": f"{score}/10 (Grade: {grade})", "inline": True})
+        embed_color = value_score.get("color", embed_color)
+
     embed = {
         "title": f"🏠 {address}",
         "url": url,
-        "color": 0x00B4D8,
+        "color": embed_color,
         "fields": fields,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "footer": {"text": "NYC Apartment Tracker • StreetEasy"},
@@ -649,8 +999,12 @@ def run_scraper():
     session = get_session(config)
     delay = config["scraper"]["request_delay_seconds"]
     new_count = 0
+    price_drop_count = 0
     total_found = 0
     new_listings = []
+
+    # Pre-compute neighborhood medians for value scoring
+    medians = compute_neighborhood_medians(seen)
 
     for i, neighborhood in enumerate(neighborhoods):
         if i > 0:
@@ -661,37 +1015,92 @@ def run_scraper():
 
         for listing in listings:
             url = listing["url"]
+            current_price = parse_price(listing["price"])
+
+            # --- Price drop detection for seen listings ---
             if url in seen:
+                # Update last_scraped timestamp
+                seen[url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+
+                # Lazy geo backfill for old entries missing coordinates
+                if geoclient_key and "latitude" not in seen[url]:
+                    geo = geoclient_lookup(seen[url].get("address", ""), geoclient_key)
+                    if geo and geo["latitude"] and geo["longitude"]:
+                        seen[url]["latitude"] = geo["latitude"]
+                        seen[url]["longitude"] = geo["longitude"]
+                    if geo and not is_within_geo_bounds(geo.get("longitude"), config):
+                        log.info("REMOVING (geo bounds): %s", seen[url].get("address"))
+                        del seen[url]
+                        continue
+
+                if current_price is not None and webhook_url and not is_first_run:
+                    change = detect_price_change(seen[url], current_price)
+                    if change:
+                        price_drop_count += 1
+                        log.info("PRICE DROP: %s — $%d → $%d (%s%%)",
+                                 seen[url].get("address", "?"),
+                                 change["old_price"], change["new_price"], change["pct"])
+                        dom = compute_days_on_market(seen[url].get("first_seen"))
+                        # Build listing-like dict for the notification
+                        drop_listing = {
+                            "address": seen[url].get("address", "Unknown"),
+                            "url": url,
+                            "neighborhood": seen[url].get("neighborhood", "N/A"),
+                        }
+                        send_discord_price_drop(webhook_url, drop_listing, change,
+                                                config, days_on_market=dom)
+                        update_price_history(seen[url], current_price)
+                        time.sleep(1)
                 continue
 
-            # New listing!
+            # New listing — geoclient lookup for geo filtering + enrichment
+            geo = None
+            nearby = None
+            if geoclient_key:
+                try:
+                    geo = geoclient_lookup(listing["address"], geoclient_key)
+                except Exception as e:
+                    log.warning("Failed geoclient lookup for %s: %s", listing["address"], e)
+
+            # Geographic bounds filter — skip listings outside the bounding box
+            longitude = geo["longitude"] if geo else None
+            if not is_within_geo_bounds(longitude, config):
+                log.info("FILTERED (geo bounds): %s — lon=%.4f outside [%.3f, %.3f]",
+                         listing["address"], longitude,
+                         config["search"]["geo_bounds"]["west_longitude"],
+                         config["search"]["geo_bounds"]["east_longitude"])
+                continue
+
             new_count += 1
             new_listings.append(listing)
             log.info("NEW: %s — %s — %s", listing["price"], listing["address"], listing["neighborhood"])
 
-            seen[url] = {
+            seen_entry = {
                 "first_seen": datetime.now(timezone.utc).isoformat(),
+                "last_scraped": datetime.now(timezone.utc).isoformat(),
                 "address": listing["address"],
                 "price": listing["price"],
                 "neighborhood": listing.get("neighborhood", ""),
             }
 
-            # Geoclient lookup + subway proximity for new, notifiable listings
-            if not is_first_run and webhook_url:
-                if geoclient_key:
-                    try:
-                        geo = geoclient_lookup(listing["address"], geoclient_key)
-                        if geo:
-                            listing["cross_streets"] = geo["cross_streets"]
-                            if geo["latitude"] and geo["longitude"]:
-                                stations = _load_subway_stations()
-                                nearby = find_nearby_stations(geo["latitude"], geo["longitude"], stations)
-                                if nearby:
-                                    listing["subway_info"] = _format_subway_field(nearby)
-                    except Exception as e:
-                        log.warning("Failed geoclient/subway lookup for %s: %s", listing["address"], e)
+            # Enrich with geo data
+            if geo:
+                listing["cross_streets"] = geo["cross_streets"]
+                if geo["latitude"] and geo["longitude"]:
+                    seen_entry["latitude"] = geo["latitude"]
+                    seen_entry["longitude"] = geo["longitude"]
+                    stations = _load_subway_stations()
+                    nearby = find_nearby_stations(geo["latitude"], geo["longitude"], stations)
+                    if nearby:
+                        listing["subway_info"] = _format_subway_field(nearby)
 
-                send_discord_notification(webhook_url, listing, config)
+            seen[url] = seen_entry
+
+            # Send Discord notification for non-first-run listings
+            if not is_first_run and webhook_url:
+                vs = compute_value_score(listing, medians, nearby)
+                send_discord_notification(webhook_url, listing, config,
+                                          days_on_market=None, value_score=vs)
                 time.sleep(1)  # Rate-limit Discord messages
 
     # On first run, send a single summary instead
@@ -699,14 +1108,18 @@ def run_scraper():
         send_discord_summary(webhook_url, new_listings, config)
         log.info("Sent first-run summary notification (%d listings)", len(new_listings))
 
-    # Close browser
+    # Cleanup stale listings (before closing session)
+    removed = cleanup_stale_listings(session, seen, config, geoclient_key)
+    if removed:
+        log.info("Cleaned up %d stale/rented listing(s)", removed)
+
     session.close()
 
     # Save seen listings
     save_seen(seen)
 
     log.info("-" * 60)
-    log.info("Done. Found %d total listings, %d new.", total_found, new_count)
+    log.info("Done. Found %d total listings, %d new, %d price drops.", total_found, new_count, price_drop_count)
     log.info("Tracking %d listings total.", len(seen))
 
     # Set GitHub Actions output
@@ -717,7 +1130,118 @@ def run_scraper():
             f.write(f"total_found={total_found}\n")
 
 
-def send_discord_digest(webhook_url: str, listings: list[dict], config: dict) -> bool:
+def compute_digest_analytics(seen: dict, recent_listings: list[dict]) -> dict:
+    """Compute analytics for the daily digest.
+
+    Returns dict with:
+      - avg_by_hood: {neighborhood: avg_price}
+      - price_trends: {neighborhood: "up"/"down"/"stable"}
+      - top_deals: list of top 5 best deals by value score
+      - stale_listings: listings tracked 30+ days (negotiation targets)
+      - total_tracked: total listings being tracked
+      - overall_avg: overall average price
+    """
+    now = datetime.now(timezone.utc)
+    cutoff_7d = (now - timedelta(days=7)).isoformat()
+    cutoff_14d = (now - timedelta(days=14)).isoformat()
+
+    # Average price by neighborhood (all tracked)
+    prices_by_hood: dict[str, list[float]] = {}
+    all_prices: list[float] = []
+    for entry in seen.values():
+        hood = entry.get("neighborhood", "")
+        if not hood:
+            continue
+        price = parse_price(entry.get("price", ""))
+        if price is not None:
+            prices_by_hood.setdefault(hood, []).append(float(price))
+            all_prices.append(float(price))
+
+    avg_by_hood = {}
+    for hood, prices in sorted(prices_by_hood.items()):
+        avg_by_hood[hood] = round(sum(prices) / len(prices))
+
+    overall_avg = round(sum(all_prices) / len(all_prices)) if all_prices else 0
+
+    # Price trends: compare last 7 days vs previous 7 days
+    recent_by_hood: dict[str, list[float]] = {}
+    prev_by_hood: dict[str, list[float]] = {}
+    for entry in seen.values():
+        hood = entry.get("neighborhood", "")
+        first_seen = entry.get("first_seen", "")
+        price = parse_price(entry.get("price", ""))
+        if not hood or price is None or not first_seen:
+            continue
+        if first_seen >= cutoff_7d:
+            recent_by_hood.setdefault(hood, []).append(float(price))
+        elif first_seen >= cutoff_14d:
+            prev_by_hood.setdefault(hood, []).append(float(price))
+
+    price_trends = {}
+    all_hoods = set(recent_by_hood.keys()) | set(prev_by_hood.keys())
+    for hood in all_hoods:
+        recent_avg = sum(recent_by_hood.get(hood, [])) / len(recent_by_hood[hood]) if recent_by_hood.get(hood) else None
+        prev_avg = sum(prev_by_hood.get(hood, [])) / len(prev_by_hood[hood]) if prev_by_hood.get(hood) else None
+        if recent_avg is not None and prev_avg is not None and prev_avg > 0:
+            change_pct = ((recent_avg - prev_avg) / prev_avg) * 100
+            if change_pct > 2:
+                price_trends[hood] = "up"
+            elif change_pct < -2:
+                price_trends[hood] = "down"
+            else:
+                price_trends[hood] = "stable"
+
+    # Top 5 best deals by value score
+    medians = compute_neighborhood_medians(seen)
+    scored_listings = []
+    for url, entry in seen.items():
+        price = parse_price(entry.get("price", ""))
+        if price is None:
+            continue
+        fake_listing = {
+            "price": entry.get("price", ""),
+            "neighborhood": entry.get("neighborhood", ""),
+            "sqft": "N/A",
+        }
+        vs = compute_value_score(fake_listing, medians)
+        if vs:
+            scored_listings.append({
+                "url": url,
+                "address": entry.get("address", "Unknown"),
+                "price": entry.get("price", "N/A"),
+                "neighborhood": entry.get("neighborhood", ""),
+                "score": vs["score"],
+                "grade": vs["grade"],
+            })
+    scored_listings.sort(key=lambda x: -x["score"])
+    top_deals = scored_listings[:5]
+
+    # Stale listings (30+ days)
+    stale_listings = []
+    for url, entry in seen.items():
+        dom = compute_days_on_market(entry.get("first_seen"))
+        if dom is not None and dom >= 30:
+            stale_listings.append({
+                "url": url,
+                "address": entry.get("address", "Unknown"),
+                "price": entry.get("price", "N/A"),
+                "neighborhood": entry.get("neighborhood", ""),
+                "days": dom,
+            })
+    stale_listings.sort(key=lambda x: -x["days"])
+
+    return {
+        "avg_by_hood": avg_by_hood,
+        "price_trends": price_trends,
+        "top_deals": top_deals,
+        "stale_listings": stale_listings[:10],
+        "total_tracked": len(seen),
+        "overall_avg": overall_avg,
+    }
+
+
+def send_discord_digest(webhook_url: str, listings: list[dict], config: dict,
+                        analytics: dict | None = None) -> bool:
     """Send a daily digest embed summarizing listings found in the last 24 hours."""
     discord_config = config.get("discord", {})
 
@@ -740,14 +1264,60 @@ def send_discord_digest(webhook_url: str, listings: list[dict], config: dict) ->
         hood_lines.append(f"• **{hood}**: {len(entries)} listing(s) — {price_str}")
 
     today_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
-    description = "\n".join(hood_lines) if hood_lines else "No new listings today."
+    new_listings_desc = "\n".join(hood_lines) if hood_lines else "No new listings today."
+
+    # Build full description with analytics
+    sections = [
+        f"**{len(listings)} new listing(s)** found in the last 24 hours.\n",
+        new_listings_desc,
+    ]
+
+    if analytics:
+        # Market summary
+        total = analytics.get("total_tracked", 0)
+        avg = analytics.get("overall_avg", 0)
+        if total and avg:
+            sections.append(f"\n**Market Summary**: {total} listings tracked, avg ${avg:,}/mo")
+
+        # Average by neighborhood
+        avg_by_hood = analytics.get("avg_by_hood", {})
+        trends = analytics.get("price_trends", {})
+        if avg_by_hood:
+            avg_lines = []
+            for hood, avg_price in sorted(avg_by_hood.items()):
+                trend = trends.get(hood, "")
+                trend_icon = {"up": " \u2191", "down": " \u2193", "stable": " \u2192"}.get(trend, "")
+                avg_lines.append(f"• {hood}: ${avg_price:,}{trend_icon}")
+            sections.append("\n**Avg Price by Neighborhood:**\n" + "\n".join(avg_lines))
+
+        # Top deals
+        top_deals = analytics.get("top_deals", [])
+        if top_deals:
+            deal_lines = []
+            for d in top_deals:
+                deal_lines.append(
+                    f"• [{d['address']}]({d['url']}) — {d['price']} ({d['grade']}, {d['score']}/10)"
+                )
+            sections.append("\n**Top 5 Best Deals:**\n" + "\n".join(deal_lines))
+
+        # Stale listings
+        stale = analytics.get("stale_listings", [])
+        if stale:
+            stale_lines = []
+            for s in stale[:5]:
+                stale_lines.append(
+                    f"• [{s['address']}]({s['url']}) — {s['price']} ({s['days']}d)"
+                )
+            sections.append("\n**Negotiation Targets (30+ days):**\n" + "\n".join(stale_lines))
+
+    description = "\n".join(sections)
+    # Discord embed description limit is 4096 chars
+    if len(description) > 4096:
+        description = description[:4093] + "..."
 
     embed = {
         "title": f"\U0001f4ca Daily Digest \u2014 {today_str}",
-        "description": (
-            f"**{len(listings)} new listing(s)** found in the last 24 hours.\n\n"
-            f"{description}"
-        ),
+        "description": description,
         "color": 0x3498DB,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "footer": {"text": "NYC Apartment Tracker \u2022 Daily Digest"},
@@ -796,11 +1366,10 @@ def run_digest():
 
     log.info("Found %d listings in the last 24 hours (out of %d total)", len(recent), len(seen))
 
-    if recent:
-        send_discord_digest(webhook_url, recent, config)
-        log.info("Sent daily digest with %d listings", len(recent))
-    else:
-        log.info("No new listings in the last 24 hours — skipping digest")
+    # Always send digest — analytics are valuable even with 0 new listings
+    analytics = compute_digest_analytics(seen, recent)
+    send_discord_digest(webhook_url, recent, config, analytics=analytics)
+    log.info("Sent daily digest with %d new listings and analytics", len(recent))
 
 
 def parse_args() -> argparse.Namespace:

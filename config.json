@@ -12,7 +12,12 @@
     "max_price": 3600,
     "min_price": 0,
     "bed_rooms": ["studio", "1"],
-    "area": "manhattan"
+    "area": "manhattan",
+    "no_fee": false,
+    "geo_bounds": {
+      "west_longitude": -74.001,
+      "east_longitude": -73.983
+    }
   },
   "discord": {
     "username": "NYC Apartment Tracker",

@@ -848,7 +848,8 @@ class TestDailyDigest:
             assert len(listings_arg) == 1
             assert listings_arg[0]["address"] == "Recent Apt"
 
-    def test_run_digest_skips_when_no_recent(self):
+    def test_run_digest_still_sends_when_no_recent(self):
+        """Digest always sends (analytics are valuable even with 0 new listings)."""
         old = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat()
         seen = {
             "https://streeteasy.com/a": {
@@ -861,7 +862,15 @@ class TestDailyDigest:
              patch.dict(os.environ, {"DISCORD_WEBHOOK_URL": "https://discord.com/webhook"}), \
              patch("apartment_tracker.send_discord_digest") as mock_digest:
             at.run_digest()
-            mock_digest.assert_not_called()
+            mock_digest.assert_called_once()
+            # Recent listings arg should be empty
+            listings_arg = mock_digest.call_args[0][1]
+            assert len(listings_arg) == 0
+            # Analytics should still be provided (as keyword arg)
+            analytics_arg = mock_digest.call_args[1].get("analytics")
+            if analytics_arg is None and len(mock_digest.call_args[0]) > 3:
+                analytics_arg = mock_digest.call_args[0][3]
+            assert analytics_arg is not None
 
 
 # ---------------------------------------------------------------------------
@@ -878,3 +887,665 @@ class TestParseArgs:
         with patch("sys.argv", ["apartment_tracker.py", "--digest"]):
             args = at.parse_args()
             assert args.digest is True
+
+
+# ---------------------------------------------------------------------------
+# No-fee filter
+# ---------------------------------------------------------------------------
+
+class TestNoFeeFilter:
+    def test_no_fee_disabled(self):
+        config = {
+            "search": {"max_price": 3600, "min_price": 0, "bed_rooms": ["1"], "no_fee": False},
+        }
+        url = at.build_search_url("east-village", config)
+        assert "no_fee" not in url
+
+    def test_no_fee_enabled(self):
+        config = {
+            "search": {"max_price": 3600, "min_price": 0, "bed_rooms": ["1"], "no_fee": True},
+        }
+        url = at.build_search_url("east-village", config)
+        assert "no_fee:1" in url
+
+    def test_no_fee_absent_from_config(self):
+        config = {
+            "search": {"max_price": 3600, "min_price": 0, "bed_rooms": ["1"]},
+        }
+        url = at.build_search_url("east-village", config)
+        assert "no_fee" not in url
+
+
+# ---------------------------------------------------------------------------
+# Google Maps URL
+# ---------------------------------------------------------------------------
+
+class TestGoogleMapsUrl:
+    def test_basic_address(self):
+        url = at.build_google_maps_url("123 East 10th Street")
+        assert "google.com/maps/search" in url
+        assert "123" in url
+        assert "New+York" in url or "New%20York" in url
+
+    def test_special_characters_encoded(self):
+        url = at.build_google_maps_url("45 West 4th Street #2A")
+        assert "google.com/maps/search" in url
+        # The # should be encoded
+        assert "#" not in url.split("query=")[1] or "%23" in url
+
+    def test_embed_includes_map_field(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, {"discord": {}})
+            payload = mock_post.call_args[1]["json"]
+            fields = payload["embeds"][0]["fields"]
+            map_field = [f for f in fields if "Map" in f["name"]]
+            assert len(map_field) == 1
+            assert "google.com/maps" in map_field[0]["value"]
+
+
+# ---------------------------------------------------------------------------
+# Price drop detection
+# ---------------------------------------------------------------------------
+
+class TestPriceDropDetection:
+    def test_detect_price_drop(self):
+        seen_entry = {"price": "$3,000"}
+        result = at.detect_price_change(seen_entry, 2800)
+        assert result is not None
+        assert result["old_price"] == 3000
+        assert result["new_price"] == 2800
+        assert result["savings"] == 200
+        assert result["pct"] == pytest.approx(6.7, abs=0.1)
+
+    def test_no_change_when_price_same(self):
+        seen_entry = {"price": "$3,000"}
+        result = at.detect_price_change(seen_entry, 3000)
+        assert result is None
+
+    def test_no_change_when_price_increased(self):
+        seen_entry = {"price": "$3,000"}
+        result = at.detect_price_change(seen_entry, 3200)
+        assert result is None
+
+    def test_no_change_when_old_price_missing(self):
+        seen_entry = {"price": "N/A"}
+        result = at.detect_price_change(seen_entry, 3000)
+        assert result is None
+
+    def test_no_change_when_current_price_none(self):
+        seen_entry = {"price": "$3,000"}
+        result = at.detect_price_change(seen_entry, None)
+        assert result is None
+
+    def test_update_price_history(self):
+        seen_entry = {"price": "$3,000"}
+        at.update_price_history(seen_entry, 2800)
+        assert "price_history" in seen_entry
+        assert len(seen_entry["price_history"]) == 1
+        assert seen_entry["price_history"][0]["price"] == 2800
+        assert seen_entry["price"] == "$2,800"
+
+    def test_update_price_history_appends(self):
+        seen_entry = {"price": "$3,000", "price_history": [{"price": 2900, "date": "2026-01-01"}]}
+        at.update_price_history(seen_entry, 2800)
+        assert len(seen_entry["price_history"]) == 2
+        assert seen_entry["price_history"][-1]["price"] == 2800
+
+    def test_send_discord_price_drop(self):
+        listing = {"address": "123 Test St", "url": "https://streeteasy.com/test", "neighborhood": "Chelsea"}
+        change = {"old_price": 3000, "new_price": 2800, "savings": 200, "pct": 6.7}
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            result = at.send_discord_price_drop("https://discord.com/webhook", listing, change, {"discord": {}})
+            assert result is True
+            payload = mock_post.call_args[1]["json"]
+            embed = payload["embeds"][0]
+            assert "Price Drop" in embed["title"]
+            assert embed["color"] == 0xFF8C00
+            fields = {f["name"]: f["value"] for f in embed["fields"]}
+            assert "~~$3,000~~" in fields["💰 Price"]
+            assert "**$2,800**" in fields["💰 Price"]
+            assert "$200" in fields["💵 Savings"]
+
+
+# ---------------------------------------------------------------------------
+# Listing staleness
+# ---------------------------------------------------------------------------
+
+class TestStaleness:
+    def test_compute_days_on_market(self):
+        two_days_ago = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+        result = at.compute_days_on_market(two_days_ago)
+        assert result == 2
+
+    def test_compute_days_on_market_30_plus(self):
+        old = (datetime.now(timezone.utc) - timedelta(days=45)).isoformat()
+        result = at.compute_days_on_market(old)
+        assert result == 45
+
+    def test_compute_days_on_market_none_input(self):
+        assert at.compute_days_on_market(None) is None
+
+    def test_compute_days_on_market_empty_string(self):
+        assert at.compute_days_on_market("") is None
+
+    def test_compute_days_on_market_invalid(self):
+        assert at.compute_days_on_market("not-a-date") is None
+
+    def test_days_tracked_in_notification(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, {"discord": {}},
+                                         days_on_market=35)
+            payload = mock_post.call_args[1]["json"]
+            fields = {f["name"]: f["value"] for f in payload["embeds"][0]["fields"]}
+            assert "35 days" in fields["📅 Days Tracked"]
+            assert "negotiable" in fields["📅 Days Tracked"]
+
+    def test_days_tracked_no_hint_under_30(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+        }
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, {"discord": {}},
+                                         days_on_market=10)
+            payload = mock_post.call_args[1]["json"]
+            fields = {f["name"]: f["value"] for f in payload["embeds"][0]["fields"]}
+            assert "10 days" in fields["📅 Days Tracked"]
+            assert "negotiable" not in fields["📅 Days Tracked"]
+
+    def test_days_tracked_in_price_drop(self):
+        listing = {"address": "123 Test St", "url": "https://streeteasy.com/test", "neighborhood": "Chelsea"}
+        change = {"old_price": 3000, "new_price": 2800, "savings": 200, "pct": 6.7}
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_price_drop("https://discord.com/webhook", listing, change,
+                                       {"discord": {}}, days_on_market=40)
+            payload = mock_post.call_args[1]["json"]
+            fields = {f["name"]: f["value"] for f in payload["embeds"][0]["fields"]}
+            assert "40 days" in fields["📅 Days Tracked"]
+            assert "negotiable" in fields["📅 Days Tracked"]
+
+
+# ---------------------------------------------------------------------------
+# Value score system
+# ---------------------------------------------------------------------------
+
+class TestValueScore:
+    def test_compute_neighborhood_medians(self):
+        seen = {
+            "a": {"price": "$3,000", "neighborhood": "Chelsea"},
+            "b": {"price": "$3,200", "neighborhood": "Chelsea"},
+            "c": {"price": "$2,800", "neighborhood": "SoHo"},
+        }
+        medians = at.compute_neighborhood_medians(seen)
+        assert medians["Chelsea"] == 3100.0  # median of 3000, 3200
+        assert medians["SoHo"] == 2800.0
+
+    def test_compute_neighborhood_medians_empty(self):
+        assert at.compute_neighborhood_medians({}) == {}
+
+    def test_value_score_below_median_scores_high(self):
+        medians = {"Chelsea": 3500.0}
+        listing = {"price": "$2,800", "neighborhood": "Chelsea", "sqft": "N/A"}
+        vs = at.compute_value_score(listing, medians)
+        assert vs is not None
+        assert vs["score"] > 5.0
+
+    def test_value_score_above_median_scores_low(self):
+        medians = {"Chelsea": 2500.0}
+        listing = {"price": "$3,500", "neighborhood": "Chelsea", "sqft": "N/A"}
+        vs = at.compute_value_score(listing, medians)
+        assert vs is not None
+        assert vs["score"] < 5.0
+
+    def test_value_score_with_subway(self):
+        medians = {"Chelsea": 3000.0}
+        listing = {"price": "$3,000", "neighborhood": "Chelsea", "sqft": "N/A"}
+        nearby = [{"name": "23rd St", "routes": ["1"], "distance_mi": 0.1}]
+        vs = at.compute_value_score(listing, medians, nearby)
+        assert vs is not None
+        assert vs["score"] > 5.0  # Close subway boosts score
+
+    def test_value_score_returns_none_for_unparseable_price(self):
+        medians = {"Chelsea": 3000.0}
+        listing = {"price": "N/A", "neighborhood": "Chelsea", "sqft": "N/A"}
+        assert at.compute_value_score(listing, medians) is None
+
+    def test_value_score_grade_a(self):
+        medians = {"Chelsea": 4000.0}
+        listing = {"price": "$2,500", "neighborhood": "Chelsea", "sqft": "500 ft²"}
+        nearby = [{"name": "23rd St", "routes": ["1"], "distance_mi": 0.05}]
+        vs = at.compute_value_score(listing, medians, nearby)
+        assert vs is not None
+        assert vs["grade"] == "A"
+        assert vs["color"] == 0x2ECC71
+
+    def test_value_score_in_notification(self):
+        listing = {
+            "price": "$3,000", "address": "123 Test St", "beds": "1 bed",
+            "baths": "1 bath", "sqft": "650 ft²", "neighborhood": "East Village",
+            "url": "https://streeteasy.com/building/test/1",
+        }
+        vs = {"score": 7.5, "grade": "B", "color": 0x27AE60}
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_notification("https://discord.com/webhook", listing, {"discord": {}},
+                                         value_score=vs)
+            payload = mock_post.call_args[1]["json"]
+            embed = payload["embeds"][0]
+            assert embed["color"] == 0x27AE60
+            fields = {f["name"]: f["value"] for f in embed["fields"]}
+            assert "7.5/10" in fields["📊 Value Score"]
+            assert "Grade: B" in fields["📊 Value Score"]
+
+
+# ---------------------------------------------------------------------------
+# Digest analytics
+# ---------------------------------------------------------------------------
+
+class TestDigestAnalytics:
+    def _make_seen(self):
+        now = datetime.now(timezone.utc)
+        return {
+            "https://streeteasy.com/a": {
+                "first_seen": (now - timedelta(hours=6)).isoformat(),
+                "address": "Apt A", "price": "$3,000", "neighborhood": "Chelsea",
+            },
+            "https://streeteasy.com/b": {
+                "first_seen": (now - timedelta(days=10)).isoformat(),
+                "address": "Apt B", "price": "$3,200", "neighborhood": "Chelsea",
+            },
+            "https://streeteasy.com/c": {
+                "first_seen": (now - timedelta(days=35)).isoformat(),
+                "address": "Apt C", "price": "$2,800", "neighborhood": "SoHo",
+            },
+            "https://streeteasy.com/d": {
+                "first_seen": (now - timedelta(days=5)).isoformat(),
+                "address": "Apt D", "price": "$2,500", "neighborhood": "SoHo",
+            },
+        }
+
+    def test_avg_by_hood(self):
+        seen = self._make_seen()
+        analytics = at.compute_digest_analytics(seen, [])
+        assert "Chelsea" in analytics["avg_by_hood"]
+        assert "SoHo" in analytics["avg_by_hood"]
+        assert analytics["avg_by_hood"]["Chelsea"] == 3100  # avg of 3000, 3200
+
+    def test_overall_avg(self):
+        seen = self._make_seen()
+        analytics = at.compute_digest_analytics(seen, [])
+        assert analytics["overall_avg"] > 0
+        assert analytics["total_tracked"] == 4
+
+    def test_top_deals(self):
+        seen = self._make_seen()
+        analytics = at.compute_digest_analytics(seen, [])
+        assert len(analytics["top_deals"]) <= 5
+        for deal in analytics["top_deals"]:
+            assert "score" in deal
+            assert "grade" in deal
+
+    def test_stale_listings(self):
+        seen = self._make_seen()
+        analytics = at.compute_digest_analytics(seen, [])
+        assert len(analytics["stale_listings"]) >= 1
+        # Apt C is 35 days old
+        stale_addrs = [s["address"] for s in analytics["stale_listings"]]
+        assert "Apt C" in stale_addrs
+
+    def test_digest_includes_analytics(self):
+        seen = self._make_seen()
+        analytics = at.compute_digest_analytics(seen, [])
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_digest("https://discord.com/webhook", [], {"discord": {}}, analytics=analytics)
+            payload = mock_post.call_args[1]["json"]
+            desc = payload["embeds"][0]["description"]
+            assert "Market Summary" in desc
+            assert "Avg Price by Neighborhood" in desc
+
+    def test_digest_description_limit(self):
+        """Digest description should not exceed 4096 characters."""
+        # Create a large seen dict
+        seen = {}
+        now = datetime.now(timezone.utc)
+        for i in range(200):
+            seen[f"https://streeteasy.com/{i}"] = {
+                "first_seen": (now - timedelta(days=i % 60)).isoformat(),
+                "address": f"Apt {i} at {'A' * 50} Street",
+                "price": f"${2000 + i * 10:,}",
+                "neighborhood": f"Neighborhood{i % 20}",
+            }
+        analytics = at.compute_digest_analytics(seen, [])
+        with patch("apartment_tracker.requests.post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.raise_for_status = MagicMock()
+            mock_post.return_value = mock_resp
+            at.send_discord_digest("https://discord.com/webhook", [], {"discord": {}}, analytics=analytics)
+            payload = mock_post.call_args[1]["json"]
+            desc = payload["embeds"][0]["description"]
+            assert len(desc) <= 4096
+
+
+# ---------------------------------------------------------------------------
+# Geographic bounds filtering
+# ---------------------------------------------------------------------------
+
+class TestGeoBounds:
+    CONFIG_WITH_BOUNDS = {
+        "search": {
+            "geo_bounds": {
+                "west_longitude": -74.001,
+                "east_longitude": -73.983,
+            }
+        }
+    }
+    CONFIG_NO_BOUNDS = {"search": {}}
+
+    def test_inside_bounds(self):
+        assert at.is_within_geo_bounds(-73.990, self.CONFIG_WITH_BOUNDS) is True
+
+    def test_outside_east(self):
+        """Longitude east of 1st Ave (e.g. Avenue A) should be rejected."""
+        assert at.is_within_geo_bounds(-73.980, self.CONFIG_WITH_BOUNDS) is False
+
+    def test_outside_west(self):
+        """Longitude west of 8th Ave (e.g. 9th Ave) should be rejected."""
+        assert at.is_within_geo_bounds(-74.005, self.CONFIG_WITH_BOUNDS) is False
+
+    def test_on_east_boundary(self):
+        assert at.is_within_geo_bounds(-73.983, self.CONFIG_WITH_BOUNDS) is True
+
+    def test_on_west_boundary(self):
+        assert at.is_within_geo_bounds(-74.001, self.CONFIG_WITH_BOUNDS) is True
+
+    def test_no_bounds_configured(self):
+        assert at.is_within_geo_bounds(-73.980, self.CONFIG_NO_BOUNDS) is True
+
+    def test_no_longitude(self):
+        assert at.is_within_geo_bounds(None, self.CONFIG_WITH_BOUNDS) is True
+
+
+# ---------------------------------------------------------------------------
+# check_listing_status
+# ---------------------------------------------------------------------------
+
+class TestCheckListingStatus:
+    def test_404_returns_gone(self):
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 404)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "gone"
+
+    def test_403_returns_unknown(self):
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 403)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "unknown"
+
+    def test_network_error_returns_unknown(self):
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, None)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "unknown"
+
+    def test_500_returns_unknown(self):
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 500)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "unknown"
+
+    def test_200_no_longer_available_returns_gone(self):
+        soup = BeautifulSoup("<html><body><p>This listing is no longer available</p></body></html>", "lxml")
+        session = MagicMock()
+        session.fetch_with_status.return_value = (soup, 200)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "gone"
+
+    def test_200_off_market_returns_gone(self):
+        soup = BeautifulSoup("<html><body><p>This unit is off market</p></body></html>", "lxml")
+        session = MagicMock()
+        session.fetch_with_status.return_value = (soup, 200)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "gone"
+
+    def test_200_normal_listing_returns_active(self):
+        soup = BeautifulSoup("<html><body><span class='price'>$3,000</span></body></html>", "lxml")
+        session = MagicMock()
+        session.fetch_with_status.return_value = (soup, 200)
+        assert at.check_listing_status(session, "https://streeteasy.com/x") == "active"
+
+
+# ---------------------------------------------------------------------------
+# cleanup_stale_listings
+# ---------------------------------------------------------------------------
+
+class TestCleanupStaleListings:
+    CONFIG = {
+        "scraper": {"request_delay_seconds": 0},
+        "search": {},
+    }
+
+    def test_stale_gone_entry_removed(self):
+        old_ts = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        seen = {
+            "https://streeteasy.com/gone": {
+                "address": "Gone Apt", "price": "$3,000",
+                "last_scraped": old_ts,
+            },
+        }
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 404)
+        removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "")
+        assert removed == 1
+        assert "https://streeteasy.com/gone" not in seen
+
+    def test_stale_active_entry_updated(self):
+        old_ts = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        seen = {
+            "https://streeteasy.com/active": {
+                "address": "Active Apt", "price": "$3,000",
+                "last_scraped": old_ts,
+            },
+        }
+        soup = BeautifulSoup("<html><body><span class='price'>$3,000</span></body></html>", "lxml")
+        session = MagicMock()
+        session.fetch_with_status.return_value = (soup, 200)
+        removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "")
+        assert removed == 0
+        assert "https://streeteasy.com/active" in seen
+        # last_scraped should have been updated
+        new_ts = seen["https://streeteasy.com/active"]["last_scraped"]
+        assert new_ts > old_ts
+
+    def test_fresh_entry_not_checked(self):
+        fresh_ts = datetime.now(timezone.utc).isoformat()
+        seen = {
+            "https://streeteasy.com/fresh": {
+                "address": "Fresh Apt", "price": "$3,000",
+                "last_scraped": fresh_ts,
+            },
+        }
+        session = MagicMock()
+        removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "")
+        assert removed == 0
+        session.fetch_with_status.assert_not_called()
+
+    def test_respects_max_checks(self):
+        old_ts = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        seen = {}
+        for i in range(20):
+            seen[f"https://streeteasy.com/{i}"] = {
+                "address": f"Apt {i}", "price": "$3,000",
+                "last_scraped": old_ts,
+            }
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 404)
+        removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "", max_checks=5)
+        assert removed == 5
+        assert session.fetch_with_status.call_count == 5
+
+    def test_missing_last_scraped_treated_as_stale(self):
+        seen = {
+            "https://streeteasy.com/old": {
+                "address": "Old Apt", "price": "$3,000",
+                # no last_scraped
+            },
+        }
+        session = MagicMock()
+        session.fetch_with_status.return_value = (None, 404)
+        removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "")
+        assert removed == 1
+
+    def test_geo_backfill_during_cleanup(self):
+        old_ts = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        seen = {
+            "https://streeteasy.com/apt": {
+                "address": "123 East 10th Street", "price": "$3,000",
+                "last_scraped": old_ts,
+                # no latitude/longitude
+            },
+        }
+        soup = BeautifulSoup("<html><body><span class='price'>$3,000</span></body></html>", "lxml")
+        session = MagicMock()
+        session.fetch_with_status.return_value = (soup, 200)
+        with patch("apartment_tracker.geoclient_lookup") as mock_geo:
+            mock_geo.return_value = {"cross_streets": None, "latitude": 40.73, "longitude": -73.99}
+            removed = at.cleanup_stale_listings(session, seen, self.CONFIG, "fake-key")
+        assert removed == 0
+        assert seen["https://streeteasy.com/apt"]["latitude"] == 40.73
+        assert seen["https://streeteasy.com/apt"]["longitude"] == -73.99
+
+
+# ---------------------------------------------------------------------------
+# Lazy geo backfill in run_scraper
+# ---------------------------------------------------------------------------
+
+class TestLazyGeoBackfill:
+    CONFIG = {
+        "search": {
+            "max_price": 3600, "min_price": 0, "bed_rooms": ["studio", "1"],
+            "neighborhoods": ["east-village"],
+            "geo_bounds": {"west_longitude": -74.001, "east_longitude": -73.983},
+        },
+        "scraper": {"request_delay_seconds": 0},
+        "discord": {},
+    }
+
+    def test_seen_listing_no_coords_gets_backfill(self):
+        """Seen listing with no lat/lon gets geoclient lookup and coords stored."""
+        seen = {
+            "https://streeteasy.com/building/test/1": {
+                "first_seen": "2026-01-01T00:00:00+00:00",
+                "address": "123 East 10th Street",
+                "price": "$3,000",
+                "neighborhood": "East Village",
+                # no latitude/longitude
+            },
+        }
+        listing = {
+            "url": "https://streeteasy.com/building/test/1",
+            "address": "123 East 10th Street",
+            "price": "$3,000",
+            "neighborhood": "East Village",
+        }
+        with patch("apartment_tracker.geoclient_lookup") as mock_geo:
+            mock_geo.return_value = {"cross_streets": None, "latitude": 40.73, "longitude": -73.99}
+            with patch("apartment_tracker.is_within_geo_bounds", return_value=True):
+                url = listing["url"]
+                # Simulate the seen-listing path
+                seen[url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+                geoclient_key = "fake-key"
+                if geoclient_key and "latitude" not in seen[url]:
+                    geo = at.geoclient_lookup(seen[url].get("address", ""), geoclient_key)
+                    if geo and geo["latitude"] and geo["longitude"]:
+                        seen[url]["latitude"] = geo["latitude"]
+                        seen[url]["longitude"] = geo["longitude"]
+
+        assert seen[url]["latitude"] == 40.73
+        assert seen[url]["longitude"] == -73.99
+
+    def test_seen_listing_outside_bounds_removed(self):
+        """Seen listing that resolves to outside geo bounds gets removed."""
+        seen = {
+            "https://streeteasy.com/building/test/1": {
+                "first_seen": "2026-01-01T00:00:00+00:00",
+                "address": "500 East 10th Street",
+                "price": "$3,000",
+                "neighborhood": "East Village",
+            },
+        }
+        url = "https://streeteasy.com/building/test/1"
+        geoclient_key = "fake-key"
+        config = self.CONFIG
+        with patch("apartment_tracker.geoclient_lookup") as mock_geo:
+            # Longitude east of bounds (Ave A/B territory)
+            mock_geo.return_value = {"cross_streets": None, "latitude": 40.73, "longitude": -73.978}
+            seen[url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+            if geoclient_key and "latitude" not in seen[url]:
+                geo = at.geoclient_lookup(seen[url].get("address", ""), geoclient_key)
+                if geo and geo["latitude"] and geo["longitude"]:
+                    seen[url]["latitude"] = geo["latitude"]
+                    seen[url]["longitude"] = geo["longitude"]
+                if geo and not at.is_within_geo_bounds(geo.get("longitude"), config):
+                    del seen[url]
+
+        assert url not in seen
+
+    def test_geoclient_failure_no_removal(self):
+        """If geoclient fails, listing is not removed and proceeds normally."""
+        seen = {
+            "https://streeteasy.com/building/test/1": {
+                "first_seen": "2026-01-01T00:00:00+00:00",
+                "address": "123 East 10th Street",
+                "price": "$3,000",
+                "neighborhood": "East Village",
+            },
+        }
+        url = "https://streeteasy.com/building/test/1"
+        geoclient_key = "fake-key"
+        config = self.CONFIG
+        with patch("apartment_tracker.geoclient_lookup") as mock_geo:
+            mock_geo.return_value = None
+            seen[url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+            if geoclient_key and "latitude" not in seen[url]:
+                geo = at.geoclient_lookup(seen[url].get("address", ""), geoclient_key)
+                if geo and geo["latitude"] and geo["longitude"]:
+                    seen[url]["latitude"] = geo["latitude"]
+                    seen[url]["longitude"] = geo["longitude"]
+                if geo and not at.is_within_geo_bounds(geo.get("longitude"), config):
+                    del seen[url]
+
+        assert url in seen
