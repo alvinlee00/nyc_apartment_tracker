@@ -186,13 +186,27 @@ def listing_matches_user(listing: dict, user_prefs: dict) -> bool:
     # --- Geo bounds filter ---
     geo_bounds = filters.get("geo_bounds")
     if geo_bounds:
-        listing_lon = listing.get("longitude")
-        if listing_lon is not None:
-            west = geo_bounds.get("west_longitude")
-            east = geo_bounds.get("east_longitude")
-            if west is not None and east is not None:
-                if not (west <= listing_lon <= east):
-                    return False
+        # Only apply geo filter to specific neighborhoods if apply_to is set
+        apply_to = geo_bounds.get("apply_to", [])
+        should_apply = True
+        if apply_to:
+            listing_hood = listing.get("neighborhood", "")
+            should_apply = False
+            for slug in apply_to:
+                aliases = NEIGHBORHOOD_ALIASES.get(slug, set())
+                display = VALID_NEIGHBORHOODS.get(slug, "")
+                if listing_hood in aliases or listing_hood == display:
+                    should_apply = True
+                    break
+
+        if should_apply:
+            listing_lon = listing.get("longitude")
+            if listing_lon is not None:
+                west = geo_bounds.get("west_longitude")
+                east = geo_bounds.get("east_longitude")
+                if west is not None and east is not None:
+                    if not (west <= listing_lon <= east):
+                        return False
 
     return True
 

@@ -1254,8 +1254,8 @@ def run_scraper():
                             "url": url,
                             "neighborhood": seen[url].get("neighborhood", "N/A"),
                         }
-                        # Send webhook notification
-                        if webhook_url:
+                        # Send webhook notification (skip if personalized DMs enabled)
+                        if webhook_url and not (bot_token and _use_mongodb()):
                             send_discord_price_drop(webhook_url, drop_listing, change,
                                                     config, days_on_market=dom)
                             time.sleep(1)
@@ -1314,14 +1314,15 @@ def run_scraper():
             seen[url] = seen_entry
 
             # Send Discord webhook notification for non-first-run listings
-            if not is_first_run and webhook_url:
+            # Skip broadcast when personalized DMs are enabled
+            if not is_first_run and webhook_url and not (bot_token and _use_mongodb()):
                 vs = compute_value_score(listing, medians, nearby)
                 send_discord_notification(webhook_url, listing, config,
                                           days_on_market=None, value_score=vs)
                 time.sleep(1)  # Rate-limit Discord messages
 
-    # On first run, send a single summary instead
-    if is_first_run and webhook_url and new_listings:
+    # On first run, send a single summary instead (only if no personalized DMs)
+    if is_first_run and webhook_url and new_listings and not (bot_token and _use_mongodb()):
         send_discord_summary(webhook_url, new_listings, config)
         log.info("Sent first-run summary notification (%d listings)", len(new_listings))
 
@@ -1595,8 +1596,8 @@ def run_digest():
     # Always send digest — analytics are valuable even with 0 new listings
     analytics = compute_digest_analytics(seen, recent)
 
-    # Send webhook digest (original behavior)
-    if webhook_url:
+    # Send webhook digest (skip if personalized DMs enabled)
+    if webhook_url and not (bot_token and _use_mongodb()):
         send_discord_digest(webhook_url, recent, config, analytics=analytics)
         log.info("Sent daily digest with %d new listings and analytics", len(recent))
 

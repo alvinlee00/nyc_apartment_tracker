@@ -74,6 +74,17 @@ def _build_settings_embed(user: dict, message: str | None = None) -> discord.Emb
 
     no_fee = "Yes" if filters.get("no_fee") else "No"
 
+    geo = filters.get("geo_bounds")
+    if geo and geo.get("west_longitude") is not None:
+        apply_to = geo.get("apply_to", [])
+        if apply_to:
+            hood_names = ", ".join(VALID_NEIGHBORHOODS.get(h, h) for h in apply_to)
+            geo_display = f"W: {geo['west_longitude']}, E: {geo['east_longitude']} ({hood_names} only)"
+        else:
+            geo_display = f"W: {geo['west_longitude']}, E: {geo['east_longitude']} (all)"
+    else:
+        geo_display = "Off"
+
     description = message + "\n\n" if message else ""
     description += "Use the buttons below to configure your filters."
 
@@ -82,6 +93,7 @@ def _build_settings_embed(user: dict, message: str | None = None) -> discord.Emb
     embed.add_field(name="Price Range", value=price_display, inline=True)
     embed.add_field(name="Bed Types", value=bed_display, inline=True)
     embed.add_field(name="No-Fee Only", value=no_fee, inline=True)
+    embed.add_field(name="Geo Filter", value=geo_display, inline=True)
 
     return embed
 
@@ -469,6 +481,12 @@ class SettingsView(discord.ui.View):
             view=view,
         )
 
+    @discord.ui.button(label="Geo Filter", style=discord.ButtonStyle.secondary, emoji="🗺️", row=1)
+    async def geo_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        modal = GeoFilterModal(self.user_id, user)
+        await interaction.response.send_modal(modal)
+
     @discord.ui.button(label="Done", style=discord.ButtonStyle.success, emoji="✅", row=1)
     async def done_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         user = db_module.get_user(self.user_id)
@@ -668,6 +686,103 @@ class PriceRangeModal(discord.ui.Modal, title="Set Price Range"):
         await interaction.response.send_message(
             f"Price range updated: **{price_str}**\n"
             "The settings panel above reflects your changes.",
+            ephemeral=True,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Geo filter modal
+# ---------------------------------------------------------------------------
+
+class GeoFilterModal(discord.ui.Modal, title="Set Geo Filter (Longitude Bounds)"):
+    def __init__(self, user_id: str, user: dict):
+        super().__init__()
+        self.user_id = user_id
+        geo = user.get("filters", {}).get("geo_bounds") or {}
+        self.west_input = discord.ui.TextInput(
+            label="West Longitude (e.g. -74.001 ~ 7th Ave)",
+            placeholder="-74.001",
+            default=str(geo.get("west_longitude", "")) if geo.get("west_longitude") is not None else "",
+            required=False,
+            max_length=12,
+        )
+        self.east_input = discord.ui.TextInput(
+            label="East Longitude (e.g. -73.983 ~ 1st Ave)",
+            placeholder="-73.983",
+            default=str(geo.get("east_longitude", "")) if geo.get("east_longitude") is not None else "",
+            required=False,
+            max_length=12,
+        )
+        apply_to = geo.get("apply_to", [])
+        self.neighborhoods_input = discord.ui.TextInput(
+            label="Apply to neighborhoods (blank = all)",
+            placeholder="east-village, les",
+            default=", ".join(apply_to) if apply_to else "",
+            required=False,
+            max_length=200,
+            style=discord.TextStyle.short,
+        )
+        self.add_item(self.west_input)
+        self.add_item(self.east_input)
+        self.add_item(self.neighborhoods_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        west_str = self.west_input.value.strip()
+        east_str = self.east_input.value.strip()
+        hoods_str = self.neighborhoods_input.value.strip()
+
+        # If both lon fields empty, clear the geo filter
+        if not west_str and not east_str:
+            db_module.update_user(self.user_id, {"filters.geo_bounds": None})
+            await interaction.response.send_message(
+                "Geo filter **removed** — all longitudes allowed.",
+                ephemeral=True,
+            )
+            return
+
+        try:
+            west = float(west_str)
+            east = float(east_str)
+        except ValueError:
+            await interaction.response.send_message(
+                "Please enter valid numbers (e.g. -74.001).", ephemeral=True,
+            )
+            return
+
+        if west > east:
+            await interaction.response.send_message(
+                "West longitude must be less than east longitude.", ephemeral=True,
+            )
+            return
+
+        # Parse neighborhood slugs
+        apply_to = [h.strip() for h in hoods_str.split(",") if h.strip()] if hoods_str else []
+
+        # Validate neighborhood slugs
+        invalid = [h for h in apply_to if h not in VALID_NEIGHBORHOODS]
+        if invalid:
+            await interaction.response.send_message(
+                f"Unknown neighborhoods: **{', '.join(invalid)}**\n"
+                "Use slugs like `east-village`, `les`, `chelsea`.",
+                ephemeral=True,
+            )
+            return
+
+        geo_data = {
+            "west_longitude": west,
+            "east_longitude": east,
+            "apply_to": apply_to,
+        }
+        db_module.update_user(self.user_id, {"filters.geo_bounds": geo_data})
+
+        if apply_to:
+            hood_names = ", ".join(VALID_NEIGHBORHOODS.get(h, h) for h in apply_to)
+            scope = f"Applies to: **{hood_names}**"
+        else:
+            scope = "Applies to: **all neighborhoods**"
+
+        await interaction.response.send_message(
+            f"Geo filter updated: **W: {west}, E: {east}**\n{scope}",
             ephemeral=True,
         )
 
