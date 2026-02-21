@@ -3,7 +3,7 @@
     "first_seen": "2026-02-11T04:38:54.367469+00:00",
     "address": "4 Lexington Avenue #8P",
     "price": "$3,500",
-    "last_scraped": "2026-02-20T04:47:01.130989+00:00",
+    "last_scraped": "2026-02-17T20:22:01.586479+00:00",
     "latitude": 40.738461,
     "longitude": -73.985515
   },
@@ -11,7 +11,7 @@
     "first_seen": "2026-02-11T04:38:54.367575+00:00",
     "address": "105 East 15th Street #58",
     "price": "$3,160",
-    "last_scraped": "2026-02-21T20:26:29.195777+00:00",
+    "last_scraped": "2026-02-17T20:22:01.586512+00:00",
     "latitude": 40.73514,
     "longitude": -73.989399
   },
@@ -19,7 +19,7 @@
     "first_seen": "2026-02-11T04:38:54.367642+00:00",
     "address": "162 East 23rd Street #2A",
     "price": "$3,550",
-    "last_scraped": "2026-02-21T20:26:28.687555+00:00",
+    "last_scraped": "2026-02-17T20:22:01.586488+00:00",
     "latitude": 40.73907,
     "longitude": -73.983729
   },
@@ -35,7 +35,7 @@
     "first_seen": "2026-02-11T04:39:03.433598+00:00",
     "address": "73 Lexington Avenue #B2",
     "price": "$2,560",
-    "last_scraped": "2026-02-21T20:26:46.131282+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743849+00:00",
     "latitude": 40.741208,
     "longitude": -73.983497
   },
@@ -43,7 +43,7 @@
     "first_seen": "2026-02-11T04:39:03.433669+00:00",
     "address": "144 East 24th Street #PHR",
     "price": "$3,550",
-    "last_scraped": "2026-02-21T20:26:41.414113+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743781+00:00",
     "latitude": 40.740033,
     "longitude": -73.983963
   },
@@ -51,7 +51,7 @@
     "first_seen": "2026-02-11T04:39:12.562169+00:00",
     "address": "242 East Tenth Street #1",
     "price": "$3,100",
-    "last_scraped": "2026-02-21T20:26:56.958471+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202798+00:00",
     "latitude": 40.728939,
     "longitude": -73.984857
   },
@@ -67,7 +67,7 @@
     "first_seen": "2026-02-11T04:39:12.562283+00:00",
     "address": "438 East 9th Street #7",
     "price": "$3,595",
-    "last_scraped": "2026-02-21T20:26:57.231750+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202789+00:00",
     "latitude": 40.72755,
     "longitude": -73.983375
   },
@@ -83,7 +83,7 @@
     "first_seen": "2026-02-11T04:39:12.562480+00:00",
     "address": "338 East 11th Street #5R",
     "price": "$2,750",
-    "last_scraped": "2026-02-21T20:27:00.583648+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203086+00:00",
     "latitude": 40.729752,
     "longitude": -73.984918
   },
@@ -91,7 +91,7 @@
     "first_seen": "2026-02-11T04:39:12.562669+00:00",
     "address": "261 East 10th Street #6",
     "price": "$3,450",
-    "last_scraped": "2026-02-21T20:27:00.858409+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202984+00:00",
     "latitude": 40.728412,
     "longitude": -73.983558
   },
@@ -115,7 +115,7 @@
     "first_seen": "2026-02-11T04:39:12.562932+00:00",
     "address": "344 East 9th Street #1",
     "price": "$3,400",
-    "last_scraped": "2026-02-18T02:13:38.426720+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202947+00:00",
     "latitude": 40.728712,
     "longitude": -73.986145
   },
@@ -131,7 +131,7 @@
     "first_seen": "2026-02-11T04:39:12.563026+00:00",
     "address": "344 East 9th Street #2",
     "price": "$3,400",
-    "last_scraped": "2026-02-21T20:27:00.858402+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203033+00:00",
     "latitude": 40.728712,
     "longitude": -73.986145
   },
@@ -139,13 +139,13 @@
     "first_seen": "2026-02-11T04:39:12.563118+00:00",
     "address": "543 1/2 East 6th Street #5",
     "price": "$3,395",
-    "last_scraped": "2026-02-21T20:26:58.646659+00:00"
+    "last_scraped": "2026-02-17T20:22:20.203007+00:00"
   },
   "https://streeteasy.com/building/518-east-6-street-new_york/08": {
     "first_seen": "2026-02-11T04:39:12.563209+00:00",
     "address": "518 East 6th Street #8",
     "price": "$3,200",
-    "last_scraped": "2026-02-21T20:26:59.456655+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202982+00:00",
     "latitude": 40.725192,
     "longitude": -73.983317
   },
@@ -153,7 +153,7 @@
     "first_seen": "2026-02-11T04:39:12.563298+00:00",
     "address": "46 East 1st Street #2/B",
     "price": "$3,450",
-    "last_scraped": "2026-02-18T19:51:01.033314+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202895+00:00",
     "latitude": 40.723843,
     "longitude": -73.989783
   },
@@ -161,7 +161,7 @@
     "first_seen": "2026-02-11T04:39:12.563342+00:00",
     "address": "320 East 11th Street #201",
     "price": "$2,500",
-    "last_scraped": "2026-02-21T20:27:00.858419+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203052+00:00",
     "latitude": 40.729842,
     "longitude": -73.985131
   },
@@ -169,7 +169,7 @@
     "first_seen": "2026-02-11T04:39:12.563478+00:00",
     "address": "149 1st Avenue #13F",
     "price": "$2,700",
-    "last_scraped": "2026-02-21T20:26:59.456681+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203013+00:00",
     "latitude": 40.728327,
     "longitude": -73.98476
   },
@@ -177,7 +177,7 @@
     "first_seen": "2026-02-11T04:39:12.563539+00:00",
     "address": "328 East 14th Street #16",
     "price": "$3,350",
-    "last_scraped": "2026-02-21T20:26:59.456690+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202986+00:00",
     "latitude": 40.731903,
     "longitude": -73.983897
   },
@@ -185,7 +185,7 @@
     "first_seen": "2026-02-11T04:39:12.563574+00:00",
     "address": "120 East Fourth Street #4C",
     "price": "$3,500",
-    "last_scraped": "2026-02-21T20:26:58.876212+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203056+00:00",
     "latitude": 40.725531,
     "longitude": -73.987881
   },
@@ -193,7 +193,7 @@
     "first_seen": "2026-02-11T04:39:12.563604+00:00",
     "address": "344 East 9th Street #9",
     "price": "$3,400",
-    "last_scraped": "2026-02-21T20:27:00.858414+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202919+00:00",
     "latitude": 40.728712,
     "longitude": -73.986145
   },
@@ -201,7 +201,7 @@
     "first_seen": "2026-02-11T04:39:12.563635+00:00",
     "address": "330 East 11th Street #7",
     "price": "$3,150",
-    "last_scraped": "2026-02-17T19:09:45.451903+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203035+00:00",
     "latitude": 40.729793,
     "longitude": -73.985016
   },
@@ -209,7 +209,7 @@
     "first_seen": "2026-02-11T04:39:12.563667+00:00",
     "address": "332 East 11th Street #5",
     "price": "$2,950",
-    "last_scraped": "2026-02-19T16:54:46.728029+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202897+00:00",
     "latitude": 40.729782,
     "longitude": -73.98499
   },
@@ -231,7 +231,7 @@
     "first_seen": "2026-02-11T04:39:12.563753+00:00",
     "address": "520 East 6th Street #1R",
     "price": "$2,895",
-    "last_scraped": "2026-02-21T20:27:01.123810+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202988+00:00",
     "latitude": 40.725179,
     "longitude": -73.983285
   },
@@ -239,7 +239,7 @@
     "first_seen": "2026-02-11T04:39:12.563780+00:00",
     "address": "341 East 9th Street #2",
     "price": "$3,200",
-    "last_scraped": "2026-02-21T20:26:59.190603+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203015+00:00",
     "latitude": 40.728753,
     "longitude": -73.986203
   },
@@ -247,7 +247,7 @@
     "first_seen": "2026-02-11T04:39:17.085715+00:00",
     "address": "64 Norfolk Street #17D",
     "price": "$1,729",
-    "last_scraped": "2026-02-21T20:27:08.699104+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932367+00:00",
     "latitude": 40.717296,
     "longitude": -73.987922
   },
@@ -255,7 +255,7 @@
     "first_seen": "2026-02-11T04:39:17.085773+00:00",
     "address": "175 Ludlow Street #12A",
     "price": "$3,200",
-    "last_scraped": "2026-02-21T20:27:08.699162+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932394+00:00",
     "latitude": 40.721847,
     "longitude": -73.987471
   },
@@ -263,7 +263,7 @@
     "first_seen": "2026-02-11T04:39:17.085822+00:00",
     "address": "101 Clinton Street #3",
     "price": "$3,150",
-    "last_scraped": "2026-02-21T20:27:08.699206+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932362+00:00",
     "latitude": 40.718361,
     "longitude": -73.985451
   },
@@ -279,7 +279,7 @@
     "first_seen": "2026-02-11T04:39:17.085915+00:00",
     "address": "64 Norfolk Street #7E",
     "price": "$1,590",
-    "last_scraped": "2026-02-21T20:27:08.699078+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932379+00:00",
     "latitude": 40.717296,
     "longitude": -73.987922
   },
@@ -287,7 +287,7 @@
     "first_seen": "2026-02-11T04:39:17.085961+00:00",
     "address": "158 Stanton Street #5A",
     "price": "$3,000",
-    "last_scraped": "2026-02-18T23:31:33.702743+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932430+00:00",
     "latitude": 40.720408,
     "longitude": -73.985021
   },
@@ -295,7 +295,7 @@
     "first_seen": "2026-02-11T04:39:17.086006+00:00",
     "address": "151 Ludlow Street #4A",
     "price": "$3,100",
-    "last_scraped": "2026-02-21T20:27:08.699137+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932381+00:00",
     "latitude": 40.720815,
     "longitude": -73.987994
   },
@@ -303,7 +303,7 @@
     "first_seen": "2026-02-11T04:39:17.086051+00:00",
     "address": "57 Clinton Street #3F",
     "price": "$2,750",
-    "last_scraped": "2026-02-21T20:27:08.699176+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932388+00:00",
     "latitude": 40.719582,
     "longitude": -73.984827
   },
@@ -311,7 +311,7 @@
     "first_seen": "2026-02-11T04:39:17.086096+00:00",
     "address": "43 Clinton Street #2D",
     "price": "$3,250",
-    "last_scraped": "2026-02-21T20:27:08.699228+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932377+00:00",
     "latitude": 40.719865,
     "longitude": -73.984679
   },
@@ -319,7 +319,7 @@
     "first_seen": "2026-02-11T04:39:17.086185+00:00",
     "address": "168 Ludlow Street #3",
     "price": "$3,350",
-    "last_scraped": "2026-02-20T04:47:30.069425+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932369+00:00",
     "latitude": 40.72154,
     "longitude": -73.987604,
     "price_history": [
@@ -333,7 +333,7 @@
     "first_seen": "2026-02-11T04:39:17.086229+00:00",
     "address": "168 Ludlow Street #UNIT3",
     "price": "$3,495",
-    "last_scraped": "2026-02-19T18:52:50.211105+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932352+00:00",
     "latitude": 40.72154,
     "longitude": -73.987604
   },
@@ -341,7 +341,7 @@
     "first_seen": "2026-02-11T04:39:17.086277+00:00",
     "address": "91 Clinton Street #8",
     "price": "$2,900",
-    "last_scraped": "2026-02-21T20:27:08.699053+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932424+00:00",
     "latitude": 40.718572,
     "longitude": -73.985343
   },
@@ -357,7 +357,7 @@
     "first_seen": "2026-02-11T04:39:17.086417+00:00",
     "address": "84 Madison Street #10",
     "price": "$3,000",
-    "last_scraped": "2026-02-17T23:30:52.380782+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932383+00:00",
     "latitude": 40.712153,
     "longitude": -73.995978
   },
@@ -365,7 +365,7 @@
     "first_seen": "2026-02-11T04:39:17.086461+00:00",
     "address": "54 Market Street #3C",
     "price": "$2,495",
-    "last_scraped": "2026-02-21T20:27:08.699192+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932385+00:00",
     "latitude": 40.711774,
     "longitude": -73.994279
   },
@@ -373,7 +373,7 @@
     "first_seen": "2026-02-11T04:39:17.086521+00:00",
     "address": "165 Ludlow Street #2A",
     "price": "$3,295",
-    "last_scraped": "2026-02-21T20:27:08.699214+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932392+00:00",
     "latitude": 40.721537,
     "longitude": -73.987629
   },
@@ -381,7 +381,7 @@
     "first_seen": "2026-02-11T04:39:17.086568+00:00",
     "address": "158 Rivington Street #4R",
     "price": "$3,500",
-    "last_scraped": "2026-02-21T20:27:08.699236+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932426+00:00",
     "latitude": 40.719182,
     "longitude": -73.985364
   },
@@ -397,7 +397,7 @@
     "first_seen": "2026-02-11T04:39:21.735207+00:00",
     "address": "17 Gay Street #6",
     "price": "$3,495",
-    "last_scraped": "2026-02-20T14:01:49.487573+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189097+00:00",
     "latitude": 40.733645,
     "longitude": -74.000393
   },
@@ -405,7 +405,7 @@
     "first_seen": "2026-02-11T04:39:26.231624+00:00",
     "address": "220 West 24th Street #2201K",
     "price": "$3,450",
-    "last_scraped": "2026-02-20T19:38:06.915639+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714610+00:00",
     "latitude": 40.745123,
     "longitude": -73.996041
   },
@@ -421,7 +421,7 @@
     "first_seen": "2026-02-11T04:39:26.231721+00:00",
     "address": "246 West 22nd Street #12A",
     "price": "$3,250",
-    "last_scraped": "2026-02-21T20:27:19.469278+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714624+00:00",
     "latitude": 40.743992,
     "longitude": -73.997477
   },
@@ -429,7 +429,7 @@
     "first_seen": "2026-02-11T04:39:26.231769+00:00",
     "address": "206 West 21st Street #C2",
     "price": "$3,000",
-    "last_scraped": "2026-02-21T20:27:18.646068+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714621+00:00",
     "latitude": 40.743007,
     "longitude": -73.997062
   },
@@ -445,7 +445,7 @@
     "first_seen": "2026-02-11T04:39:26.231960+00:00",
     "address": "226 West 25th Street #5RW",
     "price": "$3,485",
-    "last_scraped": "2026-02-21T20:27:19.195286+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714660+00:00",
     "latitude": 40.745779,
     "longitude": -73.995669
   },
@@ -453,7 +453,7 @@
     "first_seen": "2026-02-11T04:39:26.232054+00:00",
     "address": "230 West 24th Street #1G",
     "price": "$2,800",
-    "last_scraped": "2026-02-18T14:08:07.932664+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714658+00:00",
     "latitude": 40.745222,
     "longitude": -73.996283
   },
@@ -499,7 +499,7 @@
     "first_seen": "2026-02-12T03:10:47.562477+00:00",
     "address": "185 East 3rd Street #1C",
     "price": "$3,295",
-    "last_scraped": "2026-02-21T20:26:57.541248+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202844+00:00",
     "latitude": 40.723079,
     "longitude": -73.983906
   },
@@ -507,7 +507,7 @@
     "first_seen": "2026-02-12T03:10:49.956037+00:00",
     "address": "76 East 1st Street #2A",
     "price": "$3,499",
-    "last_scraped": "2026-02-21T20:26:57.541229+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202980+00:00",
     "latitude": 40.723203,
     "longitude": -73.988279
   },
@@ -515,7 +515,7 @@
     "first_seen": "2026-02-12T03:10:51.248549+00:00",
     "address": "59 East 7th Street #9",
     "price": "$3,400",
-    "last_scraped": "2026-02-21T20:27:00.282255+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202925+00:00",
     "latitude": 40.727633,
     "longitude": -73.987282
   },
@@ -523,7 +523,7 @@
     "first_seen": "2026-02-12T03:10:56.974115+00:00",
     "address": "98 Orchard Street #2A",
     "price": "$3,395",
-    "last_scraped": "2026-02-21T20:27:08.699129+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932428+00:00",
     "latitude": 40.718496,
     "longitude": -73.990033
   },
@@ -531,7 +531,7 @@
     "first_seen": "2026-02-12T05:24:59.766326+00:00",
     "address": "172 5th Avenue #3F",
     "price": "$3,000",
-    "last_scraped": "2026-02-21T20:26:32.030713+00:00",
+    "last_scraped": "2026-02-17T20:22:03.950830+00:00",
     "latitude": 40.740984,
     "longitude": -73.990004
   },
@@ -541,27 +541,21 @@
     "price": "$3,470",
     "latitude": 40.730625,
     "longitude": -73.988793,
-    "last_scraped": "2026-02-19T04:53:24.508758+00:00"
+    "last_scraped": "2026-02-17T16:58:39.879848+00:00"
   },
   "https://streeteasy.com/building/241-west-15-street-new_york/1rw": {
     "first_seen": "2026-02-12T14:11:51.187034+00:00",
     "address": "241 West 15th Street #1RW",
-    "price": "$2,950",
+    "price": "$2,995",
     "latitude": 40.739774,
     "longitude": -74.000415,
-    "last_scraped": "2026-02-21T20:27:19.469288+00:00",
-    "price_history": [
-      {
-        "price": 2950,
-        "date": "2026-02-19T15:50:57.341458+00:00"
-      }
-    ]
+    "last_scraped": "2026-02-17T16:58:39.879848+00:00"
   },
   "https://streeteasy.com/building/531-east-6-street-new_york/a2": {
     "first_seen": "2026-02-12T17:00:03.143876+00:00",
     "address": "531 East 6th Street #A2",
     "price": "$2,450",
-    "last_scraped": "2026-02-21T20:26:58.876186+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203005+00:00",
     "latitude": 40.725124,
     "longitude": -73.983108
   },
@@ -579,7 +573,7 @@
     "address": "99 Saint Marks Place #3D",
     "price": "$3,400",
     "neighborhood": "East Village",
-    "last_scraped": "2026-02-21T20:27:00.858382+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202921+00:00",
     "latitude": 40.727383,
     "longitude": -73.984767
   },
@@ -588,7 +582,7 @@
     "address": "518 East 5th Street #DUA",
     "price": "$3,575",
     "neighborhood": "East Village",
-    "last_scraped": "2026-02-21T20:26:59.456698+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202923+00:00",
     "latitude": 40.724583,
     "longitude": -73.983761
   },
@@ -606,7 +600,7 @@
     "address": "186 Orchard Street #6RS",
     "price": "$3,400",
     "neighborhood": "Lower East Side",
-    "last_scraped": "2026-02-21T20:27:08.699199+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932365+00:00",
     "latitude": 40.722015,
     "longitude": -73.988217
   },
@@ -615,7 +609,7 @@
     "address": "115 East 9th Street #5P",
     "price": "$3,000",
     "neighborhood": "East Village",
-    "last_scraped": "2026-02-18T20:40:49.771307+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203009+00:00",
     "latitude": 40.730345,
     "longitude": -73.989962
   },
@@ -624,7 +618,7 @@
     "address": "333 East 6th Street #3W",
     "price": "$3,100",
     "neighborhood": "East Village",
-    "last_scraped": "2026-02-18T14:07:47.764211+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203011+00:00",
     "latitude": 40.727029,
     "longitude": -73.987632
   },
@@ -642,7 +636,7 @@
     "address": "312 West 20th Street #1A",
     "price": "$3,000",
     "neighborhood": "Chelsea",
-    "last_scraped": "2026-02-21T20:27:18.646060+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714699+00:00",
     "latitude": 40.743699,
     "longitude": -74.000523
   },
@@ -651,7 +645,7 @@
     "address": "158 Orchard Street #4C",
     "price": "$2,750",
     "neighborhood": "Lower East Side",
-    "last_scraped": "2026-02-21T20:27:08.699120+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932390+00:00",
     "latitude": 40.720914,
     "longitude": -73.988791
   },
@@ -660,7 +654,7 @@
     "address": "340 East 5th Street #A4",
     "price": "$2,700",
     "neighborhood": "East Village",
-    "last_scraped": "2026-02-21T20:26:59.730035+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203054+00:00",
     "latitude": 40.726335,
     "longitude": -73.987953
   },
@@ -669,7 +663,7 @@
     "address": "56 Pike Street #2C",
     "price": "$2,964",
     "neighborhood": "Two Bridges",
-    "last_scraped": "2026-02-20T14:01:43.186077+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932372+00:00",
     "latitude": 40.711857,
     "longitude": -73.992342
   },
@@ -678,13 +672,13 @@
     "address": "114 Suffolk Street #5A",
     "price": "$2,900",
     "neighborhood": "Lower East Side",
-    "last_scraped": "2026-02-21T20:27:08.699221+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932387+00:00",
     "latitude": 40.718948,
     "longitude": -73.986093
   },
   "https://streeteasy.com/building/105-east-2-street-new_york/3c": {
     "first_seen": "2026-02-16T15:36:33.739907+00:00",
-    "last_scraped": "2026-02-21T20:27:00.004112+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202927+00:00",
     "address": "105 East 2nd Street #3C",
     "price": "$3,495",
     "neighborhood": "East Village",
@@ -702,7 +696,7 @@
   },
   "https://streeteasy.com/building/93-1-avenue-new_york/5d": {
     "first_seen": "2026-02-16T20:33:19.226926+00:00",
-    "last_scraped": "2026-02-18T04:54:32.383307+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202916+00:00",
     "address": "93 1st Avenue #5D",
     "price": "$2,600",
     "neighborhood": "East Village",
@@ -720,223 +714,641 @@
   },
   "https://streeteasy.com/building/248-west-20-street-new_york/1r": {
     "first_seen": "2026-02-17T17:59:04.720796+00:00",
-    "last_scraped": "2026-02-20T04:47:38.366705+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714627+00:00",
     "address": "248 West 20th Street #1R",
     "price": "$2,700",
     "neighborhood": "Chelsea",
     "latitude": 40.742842,
     "longitude": -73.998492
   },
+  "https://streeteasy.com/building/345-east-19-street-new_york/1a": {
+    "first_seen": "2026-02-17T20:22:01.586508+00:00",
+    "last_scraped": "2026-02-17T20:22:01.586509+00:00",
+    "address": "345 East 19th Street #1A",
+    "price": "$3,100",
+    "neighborhood": "Gramercy Park"
+  },
+  "https://streeteasy.com/building/102-east-31-street-new_york/4c": {
+    "first_seen": "2026-02-17T20:22:03.950783+00:00",
+    "last_scraped": "2026-02-17T20:22:03.950790+00:00",
+    "address": "102 East 31st Street #4C",
+    "price": "$2,925",
+    "neighborhood": "NoMad"
+  },
+  "https://streeteasy.com/building/106-east-30-street-new_york/2f": {
+    "first_seen": "2026-02-17T20:22:03.950809+00:00",
+    "last_scraped": "2026-02-17T20:22:03.950811+00:00",
+    "address": "106 East 30th Street #2F",
+    "price": "$3,500",
+    "neighborhood": "NoMad"
+  },
+  "https://streeteasy.com/building/126-lexington-avenue-new_york/4f": {
+    "first_seen": "2026-02-17T20:22:03.950826+00:00",
+    "last_scraped": "2026-02-17T20:22:03.950827+00:00",
+    "address": "126 Lexington Avenue #4F",
+    "price": "$3,100",
+    "neighborhood": "NoMad"
+  },
+  "https://streeteasy.com/building/waterside-plaza/4012l": {
+    "first_seen": "2026-02-17T20:22:10.743710+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743718+00:00",
+    "address": "30 Waterside Plaza #4012L",
+    "price": "$3,348",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/waterside-plaza/1028c": {
+    "first_seen": "2026-02-17T20:22:10.743735+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743736+00:00",
+    "address": "30 Waterside Plaza #1028C",
+    "price": "$3,408",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/waterside-plaza/4025l": {
+    "first_seen": "2026-02-17T20:22:10.743750+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743751+00:00",
+    "address": "30 Waterside Plaza #4025L",
+    "price": "$3,413",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/206-east-25-street-new_york/3fw": {
+    "first_seen": "2026-02-17T20:22:10.743763+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743764+00:00",
+    "address": "206 East 25th Street #3FW",
+    "price": "$3,295",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/490-2-avenue-new_york/12d": {
+    "first_seen": "2026-02-17T20:22:10.743777+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743779+00:00",
+    "address": "490 2nd Avenue #12D",
+    "price": "$3,490",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/223-east-32-street-new_york/1rw": {
+    "first_seen": "2026-02-17T20:22:10.743794+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743795+00:00",
+    "address": "223 East 32nd Street #1RW",
+    "price": "$3,075",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/382-3-avenue-new_york/3c": {
+    "first_seen": "2026-02-17T20:22:10.743808+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743809+00:00",
+    "address": "382 3rd Avenue #3C",
+    "price": "$3,495",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/331-east-33-street-new_york/4c": {
+    "first_seen": "2026-02-17T20:22:10.743821+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743822+00:00",
+    "address": "331 East 33rd Street #4C",
+    "price": "$2,799",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/216-east-29-street-new_york/2a": {
+    "first_seen": "2026-02-17T20:22:10.743833+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743835+00:00",
+    "address": "216 East 29th Street #2A",
+    "price": "$3,550",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/stonehenge-33/5d": {
+    "first_seen": "2026-02-17T20:22:10.743846+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743847+00:00",
+    "address": "141 East 33rd Street #5D",
+    "price": "$3,380",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/127-lexington-avenue-new_york/1": {
+    "first_seen": "2026-02-17T20:22:10.743861+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743862+00:00",
+    "address": "127 Lexington Avenue #1",
+    "price": "$3,500",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/207-east-27th-street/7f": {
+    "first_seen": "2026-02-17T20:22:10.743873+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743874+00:00",
+    "address": "207 East 27th Street #7F",
+    "price": "$3,450",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/229-east-29-street-new_york/2j": {
+    "first_seen": "2026-02-17T20:22:10.743886+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743887+00:00",
+    "address": "229 East 29th Street #2J",
+    "price": "$2,800",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/577-2-avenue-new_york/1r": {
+    "first_seen": "2026-02-17T20:22:10.743899+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743900+00:00",
+    "address": "577 2nd Avenue #1R",
+    "price": "$3,295",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/221-east-33-street-new_york/u2a": {
+    "first_seen": "2026-02-17T20:22:10.743910+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743912+00:00",
+    "address": "221 East 33rd Street #U2A",
+    "price": "$3,295",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/220-east-24-street-new_york/1e": {
+    "first_seen": "2026-02-17T20:22:10.743923+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743924+00:00",
+    "address": "220 East 24th Street #1E",
+    "price": "$3,300",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/212-east-26-street-new_york/2c": {
+    "first_seen": "2026-02-17T20:22:10.743935+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743936+00:00",
+    "address": "212 East 26th Street #2C",
+    "price": "$2,500",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/208-east-25-street-new_york/lde": {
+    "first_seen": "2026-02-17T20:22:10.743947+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743948+00:00",
+    "address": "208 East 25th Street #LDE",
+    "price": "$3,495",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/251-east-32-street-new_york/4d": {
+    "first_seen": "2026-02-17T20:22:10.743961+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743962+00:00",
+    "address": "251 East 32nd Street #4D",
+    "price": "$3,395",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/417-3-avenue-new_york/2c": {
+    "first_seen": "2026-02-17T20:22:10.743972+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743973+00:00",
+    "address": "417 3rd Avenue #2C",
+    "price": "$3,400",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/221-east-32-street-new_york/8": {
+    "first_seen": "2026-02-17T20:22:10.743985+00:00",
+    "last_scraped": "2026-02-17T20:22:10.743986+00:00",
+    "address": "221 East 32nd Street #8",
+    "price": "$2,970",
+    "neighborhood": "Kips Bay"
+  },
+  "https://streeteasy.com/building/27-avenue-c-new_york/1d": {
+    "first_seen": "2026-02-17T20:22:20.202821+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202822+00:00",
+    "address": "27 Avenue C #1D",
+    "price": "$3,300",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/430-east-13-street-new_york/2r": {
+    "first_seen": "2026-02-17T20:22:20.202840+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202841+00:00",
+    "address": "430 East 13th Street #2R",
+    "price": "$2,495",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/233-east-4th-street-east_village/4f": {
+    "first_seen": "2026-02-17T20:22:20.202859+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202860+00:00",
+    "address": "233 East 4th Street #4F",
+    "price": "$3,495",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/607-east-11-street-new_york/41": {
+    "first_seen": "2026-02-17T20:22:20.202874+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202875+00:00",
+    "address": "607 East 11th Street #41",
+    "price": "$3,200",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/231-east-4-street-new_york/4c": {
+    "first_seen": "2026-02-17T20:22:20.202891+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202893+00:00",
+    "address": "231 East 4th Street #4C",
+    "price": "$3,495",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/42-avenue-b-new_york/5": {
+    "first_seen": "2026-02-17T20:22:20.202912+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202914+00:00",
+    "address": "42 Avenue B #5",
+    "price": "$3,210",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/185-avenue-c-new_york/5b": {
+    "first_seen": "2026-02-17T20:22:20.202943+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202944+00:00",
+    "address": "185 Avenue C #5B",
+    "price": "$3,100",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/134-east-7-street-new_york/6c": {
+    "first_seen": "2026-02-17T20:22:20.202961+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202962+00:00",
+    "address": "140 East 7th Street #6C",
+    "price": "$3,050",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/542-east-11-street-new_york/4b": {
+    "first_seen": "2026-02-17T20:22:20.202976+00:00",
+    "last_scraped": "2026-02-17T20:22:20.202978+00:00",
+    "address": "542 East 11th Street #4B",
+    "price": "$2,595",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/309-east-8-street-new_york/b": {
+    "first_seen": "2026-02-17T20:22:20.203001+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203003+00:00",
+    "address": "309 East 8th Street #B",
+    "price": "$2,340",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/222-1-avenue-new_york/4b": {
+    "first_seen": "2026-02-17T20:22:20.203030+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203031+00:00",
+    "address": "222 1st Avenue #4B",
+    "price": "$2,995",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/299-east-8-street-new_york/3": {
+    "first_seen": "2026-02-17T20:22:20.203048+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203049+00:00",
+    "address": "299 East Eighth Street #3",
+    "price": "$3,195",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/222-1-avenue-new_york/4c": {
+    "first_seen": "2026-02-17T20:22:20.203069+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203070+00:00",
+    "address": "222 1st Avenue #4C",
+    "price": "$2,995",
+    "neighborhood": "East Village"
+  },
+  "https://streeteasy.com/building/606-east-11-street-new_york/3cc": {
+    "first_seen": "2026-02-17T20:22:20.203082+00:00",
+    "last_scraped": "2026-02-17T20:22:20.203083+00:00",
+    "address": "606 East 11th Street #3CC",
+    "price": "$3,195",
+    "neighborhood": "East Village"
+  },
   "https://streeteasy.com/building/47-orchard-street-new_york/1b": {
-    "first_seen": "2026-02-17T20:39:35.494424+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699154+00:00",
+    "first_seen": "2026-02-17T20:22:24.932420+00:00",
+    "last_scraped": "2026-02-17T20:22:24.932421+00:00",
     "address": "47 Orchard Street #1B",
     "price": "$3,000",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.71641,
-    "longitude": -73.991122
+    "neighborhood": "Lower East Side"
   },
-  "https://streeteasy.com/building/160-west-22-street-new_york/702": {
-    "first_seen": "2026-02-17T21:37:37.279000+00:00",
-    "last_scraped": "2026-02-21T20:27:18.646043+00:00",
-    "address": "160 West 22nd Street #702",
-    "price": "$3,600",
-    "neighborhood": "Chelsea",
-    "latitude": 40.742919,
-    "longitude": -73.99494
+  "https://streeteasy.com/building/24-bedford-street-new_york/a": {
+    "first_seen": "2026-02-17T20:22:27.189037+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189046+00:00",
+    "address": "26 Bedford Street #A",
+    "price": "$3,175",
+    "neighborhood": "West Village"
   },
-  "https://streeteasy.com/building/148-orchard-street-new_york/3": {
-    "first_seen": "2026-02-17T22:33:13.341386+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699112+00:00",
-    "address": "148 Orchard Street #3",
-    "price": "$2,750",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.720601,
-    "longitude": -73.98895
+  "https://streeteasy.com/building/118-christopher-street-new_york/14": {
+    "first_seen": "2026-02-17T20:22:27.189064+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189065+00:00",
+    "address": "118 Christopher Street #14",
+    "price": "$2,870",
+    "neighborhood": "West Village"
   },
-  "https://streeteasy.com/building/155-chrystie-street-new_york/7": {
-    "first_seen": "2026-02-17T22:33:14.776108+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699169+00:00",
-    "address": "155 Chrystie Street #7",
-    "price": "$3,300",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.720453,
-    "longitude": -73.992659
-  },
-  "https://streeteasy.com/building/39-east-1-street-new_york/f": {
-    "first_seen": "2026-02-17T23:30:43.244086+00:00",
-    "last_scraped": "2026-02-21T20:27:01.123791+00:00",
-    "address": "39 East 1st Street #F",
-    "price": "$3,550",
-    "neighborhood": "East Village",
-    "latitude": 40.723999,
-    "longitude": -73.990194
-  },
-  "https://streeteasy.com/building/46-east-1-street-new_york/5c": {
-    "first_seen": "2026-02-18T18:56:49.433655+00:00",
-    "last_scraped": "2026-02-20T16:40:12.393384+00:00",
-    "address": "46 East 1st Street #5C",
-    "price": "$3,395",
-    "neighborhood": "East Village",
-    "latitude": 40.723843,
-    "longitude": -73.989783
-  },
-  "https://streeteasy.com/building/312-west-23-street-new_york/1d": {
-    "first_seen": "2026-02-18T21:36:30.482684+00:00",
-    "last_scraped": "2026-02-21T20:27:18.646034+00:00",
-    "address": "312 West 23rd Street #1D",
-    "price": "$2,995",
-    "neighborhood": "Chelsea",
-    "latitude": 40.745568,
-    "longitude": -73.999163
-  },
-  "https://streeteasy.com/building/517-east-5-street-new_york/400": {
-    "first_seen": "2026-02-18T22:34:21.959536+00:00",
-    "last_scraped": "2026-02-20T18:50:54.966608+00:00",
-    "address": "517 East Fifth Street #400",
-    "price": "$2,575",
-    "neighborhood": "East Village",
-    "latitude": 40.724611,
-    "longitude": -73.983783
-  },
-  "https://streeteasy.com/building/210-east-22-street-new_york/1d": {
-    "first_seen": "2026-02-18T23:31:02.053646+00:00",
-    "last_scraped": "2026-02-21T20:26:28.687531+00:00",
-    "address": "210 East 22nd Street #1D",
-    "price": "$3,450",
-    "neighborhood": "Gramercy Park",
-    "latitude": 40.73795,
-    "longitude": -73.983141
-  },
-  "https://streeteasy.com/building/113-west-15-street-new_york/3w": {
-    "first_seen": "2026-02-18T23:31:42.008905+00:00",
-    "last_scraped": "2026-02-21T20:27:19.469283+00:00",
-    "address": "113 West 15th Street #3W",
-    "price": "$2,995",
-    "neighborhood": "Chelsea",
-    "latitude": 40.738344,
-    "longitude": -73.997027,
-    "price_history": [
-      {
-        "price": 3050,
-        "date": "2026-02-19T23:31:28.984706+00:00"
-      },
-      {
-        "price": 3000,
-        "date": "2026-02-20T14:01:55.086389+00:00"
-      },
-      {
-        "price": 2995,
-        "date": "2026-02-20T21:26:48.097147+00:00"
-      }
-    ]
-  },
-  "https://streeteasy.com/building/97-east-7-street-new_york/3": {
-    "first_seen": "2026-02-19T02:12:34.371363+00:00",
-    "last_scraped": "2026-02-19T17:51:27.926247+00:00",
-    "address": "97 East 7th Street #3",
-    "price": "$3,200",
-    "neighborhood": "East Village",
-    "latitude": 40.726763,
-    "longitude": -73.985208
-  },
-  "https://streeteasy.com/building/91-7-avenue-new_york/5h": {
-    "first_seen": "2026-02-19T04:53:38.273357+00:00",
-    "last_scraped": "2026-02-19T17:51:42.523251+00:00",
-    "address": "160 West 16th Street #5H",
-    "price": "$3,550",
-    "neighborhood": "Chelsea",
-    "latitude": 40.73937,
-    "longitude": -73.997525
-  },
-  "https://streeteasy.com/building/236-west-15-street-new_york/44": {
-    "first_seen": "2026-02-19T19:39:42.343505+00:00",
-    "last_scraped": "2026-02-21T20:27:18.646008+00:00",
-    "address": "236 West 15th Street #44",
+  "https://streeteasy.com/building/7-morton-street-new_york/19": {
+    "first_seen": "2026-02-17T20:22:27.189080+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189081+00:00",
+    "address": "7 Morton Street #19",
     "price": "$3,500",
-    "neighborhood": "Chelsea",
-    "latitude": 40.739724,
-    "longitude": -74.000343
+    "neighborhood": "West Village"
   },
-  "https://streeteasy.com/building/105-east-2-street-new_york/11": {
-    "first_seen": "2026-02-19T22:33:35.094397+00:00",
-    "last_scraped": "2026-02-21T20:26:58.876205+00:00",
-    "address": "105 East 2nd Street #11",
-    "price": "$3,600",
-    "neighborhood": "East Village",
-    "latitude": 40.723595,
-    "longitude": -73.987214
+  "https://streeteasy.com/building/634-hudson-street-new_york/rr5": {
+    "first_seen": "2026-02-17T20:22:27.189094+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189095+00:00",
+    "address": "634 Hudson Street #RR5",
+    "price": "$2,850",
+    "neighborhood": "West Village"
   },
-  "https://streeteasy.com/building/121-henry-street-new_york/6": {
-    "first_seen": "2026-02-20T02:08:34.518821+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699145+00:00",
-    "address": "121 Henry Street #6",
+  "https://streeteasy.com/building/53-leroy-street-new_york/1a": {
+    "first_seen": "2026-02-17T20:22:27.189110+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189111+00:00",
+    "address": "53 Leroy Street #1A",
+    "price": "$2,760",
+    "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/87-christopher-street-new_york/17": {
+    "first_seen": "2026-02-17T20:22:27.189123+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189124+00:00",
+    "address": "87 Christopher Street #17",
+    "price": "$3,500",
+    "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/316-west-14-street-new_york/16": {
+    "first_seen": "2026-02-17T20:22:27.189136+00:00",
+    "last_scraped": "2026-02-17T20:22:27.189137+00:00",
+    "address": "316 West 14th Street #16",
+    "price": "$3,400",
+    "neighborhood": "West Village"
+  },
+  "https://streeteasy.com/building/456-west-22-street-new_york/3b": {
+    "first_seen": "2026-02-17T20:22:31.714653+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714654+00:00",
+    "address": "456 West 22nd Street #3B",
+    "price": "$3,300",
+    "neighborhood": "West Chelsea"
+  },
+  "https://streeteasy.com/building/344-west-17-street-new_york/3a": {
+    "first_seen": "2026-02-17T20:22:31.714677+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714679+00:00",
+    "address": "344 West 17th Street #3A",
+    "price": "$3,400",
+    "neighborhood": "Chelsea"
+  },
+  "https://streeteasy.com/building/434-west-19-street-new_york/1d": {
+    "first_seen": "2026-02-17T20:22:31.714694+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714696+00:00",
+    "address": "434 West 19th Street #1D",
+    "price": "$3,100",
+    "neighborhood": "West Chelsea"
+  },
+  "https://streeteasy.com/building/327-west-18-street-new_york/3": {
+    "first_seen": "2026-02-17T20:22:31.714713+00:00",
+    "last_scraped": "2026-02-17T20:22:31.714715+00:00",
+    "address": "327 West 18th Street #3",
+    "price": "$3,250",
+    "neighborhood": "Chelsea"
+  },
+  "https://streeteasy.com/building/woodstock-tower/2110": {
+    "first_seen": "2026-02-17T20:22:40.829051+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829059+00:00",
+    "address": "320 East 42nd Street #2110",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/towne-house/206": {
+    "first_seen": "2026-02-17T20:22:40.829074+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829076+00:00",
+    "address": "108 East 38th Street #206",
+    "price": "$3,100",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/the-vanderbilt-235-east-40-street-new_york/4j": {
+    "first_seen": "2026-02-17T20:22:40.829088+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829089+00:00",
+    "address": "235 East 40th Street #4J",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/140-east-40-street-new_york/2f": {
+    "first_seen": "2026-02-17T20:22:40.829100+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829101+00:00",
+    "address": "140 East 40th Street #2F",
+    "price": "$2,950",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/344-lexington-avenue-new_york/3d": {
+    "first_seen": "2026-02-17T20:22:40.829112+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829113+00:00",
+    "address": "344 Lexington Avenue #3D",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/152-east-35-street-new_york/1h": {
+    "first_seen": "2026-02-17T20:22:40.829124+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829125+00:00",
+    "address": "152 East 35th Street #1H",
+    "price": "$2,695",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/dryden-east/604": {
+    "first_seen": "2026-02-17T20:22:40.829136+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829137+00:00",
+    "address": "150 East 39th Street #604",
+    "price": "$3,300",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/316-lexington-avenue-new_york/4w": {
+    "first_seen": "2026-02-17T20:22:40.829147+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829148+00:00",
+    "address": "316 Lexington Avenue #4W",
     "price": "$3,000",
-    "neighborhood": "Two Bridges",
-    "latitude": 40.713284,
-    "longitude": -73.991404
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/166-suffolk-street-new_york/3d": {
-    "first_seen": "2026-02-20T16:40:17.379994+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699088+00:00",
-    "address": "166 Suffolk Street #3D",
-    "price": "$2,800",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.720752,
-    "longitude": -73.985173
+  "https://streeteasy.com/building/towne-house/505": {
+    "first_seen": "2026-02-17T20:22:40.829159+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829160+00:00",
+    "address": "108 East 38th Street #505",
+    "price": "$3,300",
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/148-orchard-street-new_york/3a": {
-    "first_seen": "2026-02-20T18:51:00.199757+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699184+00:00",
-    "address": "148 Orchard Street #3A",
-    "price": "$2,795",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.720601,
-    "longitude": -73.98895
+  "https://streeteasy.com/building/330-east-35-street-new_york/20": {
+    "first_seen": "2026-02-17T20:22:40.829170+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829171+00:00",
+    "address": "330 East 35th Street #20",
+    "price": "$3,495",
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/64-norfolk-street-new_york/8f": {
-    "first_seen": "2026-02-20T19:37:53.162455+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699097+00:00",
-    "address": "64 Norfolk Street #8F",
-    "price": "$1,392",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.717296,
-    "longitude": -73.987922
+  "https://streeteasy.com/building/326-east-35-street-new_york/31": {
+    "first_seen": "2026-02-17T20:22:40.829181+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829182+00:00",
+    "address": "326 East 35th Street #31",
+    "price": "$3,495",
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/64-norfolk-street-new_york/4f": {
-    "first_seen": "2026-02-20T19:37:54.641577+00:00",
-    "last_scraped": "2026-02-21T20:27:08.699243+00:00",
-    "address": "64 Norfolk Street #4F",
-    "price": "$1,089",
-    "neighborhood": "Lower East Side",
-    "latitude": 40.717296,
-    "longitude": -73.987922
+  "https://streeteasy.com/building/5-tudor-city-place-new_york/1514": {
+    "first_seen": "2026-02-17T20:22:40.829192+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829193+00:00",
+    "address": "5 Tudor City Place #1514",
+    "price": "$2,650",
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/307-west-29-street-new_york/2b": {
-    "first_seen": "2026-02-20T20:34:33.937790+00:00",
-    "last_scraped": "2026-02-21T20:27:19.469272+00:00",
-    "address": "307 West 29th Street #2B",
-    "price": "$3,200",
-    "neighborhood": "Chelsea",
-    "latitude": 40.74929,
-    "longitude": -73.996293
+  "https://streeteasy.com/building/dryden-east/606": {
+    "first_seen": "2026-02-17T20:22:40.829204+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829205+00:00",
+    "address": "150 East 39th Street #606",
+    "price": "$3,300",
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/307-west-29-street-new_york/c": {
-    "first_seen": "2026-02-20T21:26:46.387131+00:00",
-    "last_scraped": "2026-02-21T20:27:19.469251+00:00",
-    "address": "307 West 29th Street #C",
+  "https://streeteasy.com/building/5-tudor-city-place-new_york/1805": {
+    "first_seen": "2026-02-17T20:22:40.829217+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829218+00:00",
+    "address": "5 Tudor City Place #1805",
     "price": "$3,600",
-    "neighborhood": "Chelsea",
-    "latitude": 40.74929,
-    "longitude": -73.996293
+    "neighborhood": "Murray Hill"
   },
-  "https://streeteasy.com/building/311-west-29-street-new_york/2c": {
-    "first_seen": "2026-02-21T02:03:19.481334+00:00",
-    "last_scraped": "2026-02-21T20:27:18.646052+00:00",
-    "address": "311 West 29th Street #2C",
-    "price": "$2,975",
-    "neighborhood": "Chelsea",
-    "latitude": 40.749325,
-    "longitude": -73.996373
+  "https://streeteasy.com/building/no237-madison/406": {
+    "first_seen": "2026-02-17T20:22:40.829229+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829230+00:00",
+    "address": "237 Madison Avenue #406",
+    "price": "$3,200",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/152-east-35-street-new_york/2f": {
+    "first_seen": "2026-02-17T20:22:40.829240+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829241+00:00",
+    "address": "152 East 35th Street #2F",
+    "price": "$2,800",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/towne-house/303": {
+    "first_seen": "2026-02-17T20:22:40.829251+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829252+00:00",
+    "address": "108 East 38th Street #303",
+    "price": "$3,100",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/146-east-39-street-new_york/5c": {
+    "first_seen": "2026-02-17T20:22:40.829263+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829264+00:00",
+    "address": "146 East 39th Street #5C",
+    "price": "$3,450",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/316-lexington-avenue-new_york/4r": {
+    "first_seen": "2026-02-17T20:22:40.829274+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829275+00:00",
+    "address": "316 Lexington Avenue #4R",
+    "price": "$2,995",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/dryden-east/306": {
+    "first_seen": "2026-02-17T20:22:40.829286+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829287+00:00",
+    "address": "150 East 39th Street #306",
+    "price": "$3,450",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/5-tudor-city-place-new_york/1615": {
+    "first_seen": "2026-02-17T20:22:40.829297+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829298+00:00",
+    "address": "5 Tudor City Place #1615",
+    "price": "$2,600",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/165-east-35-street-new_york/6h": {
+    "first_seen": "2026-02-17T20:22:40.829309+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829310+00:00",
+    "address": "165 East 35th Street #6H",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/137-east-38-street-new_york/1f": {
+    "first_seen": "2026-02-17T20:22:40.829321+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829322+00:00",
+    "address": "137 East 38th Street #1F",
+    "price": "$3,450",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/238-east-36-street-new_york/3d": {
+    "first_seen": "2026-02-17T20:22:40.829332+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829333+00:00",
+    "address": "238 East 36th Street #3D",
+    "price": "$3,000",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/the-townsley/rental/4950667": {
+    "first_seen": "2026-02-17T20:22:40.829344+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829345+00:00",
+    "address": "245 East 35th Street #8H",
+    "price": "$3,600",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/117-east-37-street-new_york/2d": {
+    "first_seen": "2026-02-17T20:22:40.829357+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829358+00:00",
+    "address": "117 East 37th Street #2D",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/new-york-tower/30e": {
+    "first_seen": "2026-02-17T20:22:40.829369+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829370+00:00",
+    "address": "330 East 39th Street #30E",
+    "price": "$3,400",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/305-east-40-street-new_york/rental/4906403": {
+    "first_seen": "2026-02-17T20:22:40.829381+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829382+00:00",
+    "address": "305 East 40th Street #14V",
+    "price": "$3,500",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/711-2-avenue-new_york/4d": {
+    "first_seen": "2026-02-17T20:22:40.829395+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829396+00:00",
+    "address": "711 2nd Avenue #4D",
+    "price": "$3,125",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/no237-madison/3300": {
+    "first_seen": "2026-02-17T20:22:40.829408+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829409+00:00",
+    "address": "237 Madison Avenue #3300",
+    "price": "$3,300",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/165-east-35-street-new_york/02d": {
+    "first_seen": "2026-02-17T20:22:40.829421+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829422+00:00",
+    "address": "165 East 35th Street #2D",
+    "price": "$3,400",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/25-tudor-city-place-new_york/rental/4949103": {
+    "first_seen": "2026-02-17T20:22:40.829433+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829434+00:00",
+    "address": "25 Tudor City Place #1522",
+    "price": "$2,850",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/5-tudor-city-place-new_york/1507": {
+    "first_seen": "2026-02-17T20:22:40.829445+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829446+00:00",
+    "address": "5 Tudor City Place #1507",
+    "price": "$2,800",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/213-east-37th-street-new_york/2d": {
+    "first_seen": "2026-02-17T20:22:40.829459+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829460+00:00",
+    "address": "213 East 37th Street #2D",
+    "price": "$3,295",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/woodstock-tower/2306": {
+    "first_seen": "2026-02-17T20:22:40.829470+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829471+00:00",
+    "address": "320 East 42nd Street #2306",
+    "price": "$2,750",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/5-tudor-city-place-new_york/1417": {
+    "first_seen": "2026-02-17T20:22:40.829482+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829483+00:00",
+    "address": "5 Tudor City Place #1417",
+    "price": "$2,595",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/towne-house/1105": {
+    "first_seen": "2026-02-17T20:22:40.829494+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829495+00:00",
+    "address": "108 East 38th Street #1105",
+    "price": "$3,300",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/the-vanderbilt-235-east-40-street-new_york/25i": {
+    "first_seen": "2026-02-17T20:22:40.829506+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829507+00:00",
+    "address": "235 East 40th Street #25I",
+    "price": "$3,400",
+    "neighborhood": "Murray Hill"
+  },
+  "https://streeteasy.com/building/316-lexington-avenue-new_york/3d": {
+    "first_seen": "2026-02-17T20:22:40.829518+00:00",
+    "last_scraped": "2026-02-17T20:22:40.829519+00:00",
+    "address": "316 Lexington Avenue #3D",
+    "price": "$2,650",
+    "neighborhood": "Murray Hill"
   }
 }

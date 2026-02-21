@@ -7,7 +7,8 @@
       "east-village",
       "les",
       "west-village",
-      "chelsea"
+      "chelsea",
+      "murray-hill"
     ],
     "max_price": 3600,
     "min_price": 0,
@@ -26,5 +27,11 @@
   "scraper": {
     "request_delay_seconds": 2,
     "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  },
+  "defaults": {
+    "max_price": 5000,
+    "min_price": 0,
+    "bed_rooms": [],
+    "no_fee": false
   }
 }

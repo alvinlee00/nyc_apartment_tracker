@@ -46,7 +46,15 @@ def load_config() -> dict:
         return json.load(f)
 
 
+def _use_mongodb() -> bool:
+    """Check if MongoDB backend is configured."""
+    return bool(os.environ.get("MONGODB_URI"))
+
+
 def load_seen() -> dict:
+    if _use_mongodb():
+        import db as db_module
+        return db_module.load_seen_from_mongo()
     if SEEN_PATH.exists():
         with open(SEEN_PATH) as f:
             data = json.load(f)
@@ -58,6 +66,10 @@ def load_seen() -> dict:
 
 
 def save_seen(seen: dict) -> None:
+    if _use_mongodb():
+        import db as db_module
+        db_module.save_seen_to_mongo(seen)
+        return
     with open(SEEN_PATH, "w") as f:
         json.dump(seen, f, indent=2)
 
@@ -825,19 +837,16 @@ def send_discord_price_drop(webhook_url: str, listing: dict, price_change: dict,
 # Discord notifications
 # ---------------------------------------------------------------------------
 
-def send_discord_notification(webhook_url: str, listing: dict, config: dict,
-                              days_on_market: int | None = None,
-                              value_score: dict | None = None) -> bool:
-    """Send a Discord embed for a new listing."""
-    discord_config = config.get("discord", {})
-
-    price = listing["price"]
-    address = listing["address"]
-    beds = listing["beds"]
-    baths = listing["baths"]
-    sqft = listing["sqft"]
-    neighborhood = listing["neighborhood"]
-    url = listing["url"]
+def build_listing_embed(listing: dict, days_on_market: int | None = None,
+                        value_score: dict | None = None) -> dict:
+    """Build a Discord embed dict for a listing (reused by webhook and DM paths)."""
+    price = listing.get("price", "N/A")
+    address = listing.get("address", "Unknown")
+    beds = listing.get("beds", "N/A")
+    baths = listing.get("baths", "N/A")
+    sqft = listing.get("sqft", "N/A")
+    neighborhood = listing.get("neighborhood", "N/A")
+    url = listing.get("url", "")
     image_url = listing.get("image_url", "")
 
     cross_streets = listing.get("cross_streets")
@@ -885,6 +894,17 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict,
     if image_url and image_url.startswith("http"):
         embed["image"] = {"url": image_url}
 
+    return embed
+
+
+def send_discord_notification(webhook_url: str, listing: dict, config: dict,
+                              days_on_market: int | None = None,
+                              value_score: dict | None = None) -> bool:
+    """Send a Discord embed for a new listing."""
+    discord_config = config.get("discord", {})
+
+    embed = build_listing_embed(listing, days_on_market, value_score)
+
     payload = {
         "username": discord_config.get("username", "NYC Apartment Tracker"),
         "avatar_url": discord_config.get("avatar_url", ""),
@@ -899,7 +919,7 @@ def send_discord_notification(webhook_url: str, listing: dict, config: dict,
             time.sleep(retry_after)
             resp = requests.post(webhook_url, json=payload, timeout=10)
         if resp.status_code == 400:
-            log.error("Discord 400 Bad Request for %s — response: %s", listing["address"], resp.text)
+            log.error("Discord 400 Bad Request for %s — response: %s", listing.get("address", "?"), resp.text)
         resp.raise_for_status()
         return True
     except requests.RequestException as e:
@@ -959,6 +979,185 @@ def send_discord_summary(webhook_url: str, new_listings: list[dict], config: dic
 
 
 # ---------------------------------------------------------------------------
+# Discord DM sending (via bot token, not webhook)
+# ---------------------------------------------------------------------------
+
+DISCORD_API_BASE = "https://discord.com/api/v10"
+
+
+def send_discord_dm(bot_token: str, user_id: str, embed: dict) -> bool:
+    """Send a DM to a Discord user via the bot token REST API.
+
+    1. Create/get DM channel with the user
+    2. Send the embed message to that channel
+    """
+    headers = {
+        "Authorization": f"Bot {bot_token}",
+        "Content-Type": "application/json",
+    }
+
+    # Step 1: Create DM channel
+    try:
+        resp = requests.post(
+            f"{DISCORD_API_BASE}/users/@me/channels",
+            json={"recipient_id": user_id},
+            headers=headers,
+            timeout=10,
+        )
+        resp.raise_for_status()
+        channel_id = resp.json()["id"]
+    except requests.RequestException as e:
+        log.error("Failed to create DM channel for user %s: %s", user_id, e)
+        return False
+
+    # Step 2: Send message
+    try:
+        resp = requests.post(
+            f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+            json={"embeds": [embed]},
+            headers=headers,
+            timeout=10,
+        )
+        if resp.status_code == 429:
+            retry_after = resp.json().get("retry_after", 5)
+            log.warning("Discord DM rate limit, waiting %.1fs", retry_after)
+            time.sleep(retry_after)
+            resp = requests.post(
+                f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+                json={"embeds": [embed]},
+                headers=headers,
+                timeout=10,
+            )
+        resp.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        log.error("Failed to send DM to user %s: %s", user_id, e)
+        return False
+
+
+def get_neighborhoods_to_scrape(config: dict) -> list[str]:
+    """Return union of config neighborhoods + all user-subscribed neighborhoods."""
+    neighborhoods = set(config["search"]["neighborhoods"])
+
+    if _use_mongodb():
+        import db as db_module
+        users = db_module.get_all_subscribed_users()
+        for user in users:
+            user_hoods = user.get("filters", {}).get("neighborhoods", [])
+            neighborhoods.update(user_hoods)
+
+    return sorted(neighborhoods)
+
+
+def send_personalized_notifications(
+    new_listings: list[dict],
+    price_drops: list[dict],
+    seen: dict,
+    medians: dict,
+    bot_token: str,
+) -> int:
+    """Send personalized DMs to each subscribed user based on their filters.
+
+    Args:
+        new_listings: List of new listing dicts (with enrichment data).
+        price_drops: List of dicts with keys: listing, price_change, days_on_market.
+        seen: Current seen listings dict.
+        medians: Neighborhood median prices.
+        bot_token: Discord bot token for sending DMs.
+
+    Returns:
+        Total number of DMs sent.
+    """
+    import db as db_module
+    from models import listing_matches_user
+
+    users = db_module.get_all_subscribed_users()
+    if not users:
+        log.info("No subscribed users — skipping personalized notifications")
+        return 0
+
+    total_sent = 0
+
+    for user in users:
+        user_id = user["discord_user_id"]
+        notif_settings = user.get("notification_settings", {})
+
+        # --- New listing DMs ---
+        if notif_settings.get("new_listings", True):
+            for listing in new_listings:
+                if not listing_matches_user(listing, user):
+                    continue
+                # Dedup check
+                if db_module.was_notification_sent(user_id, listing["url"], "new_listing"):
+                    continue
+
+                nearby = None
+                if listing.get("latitude") and listing.get("longitude"):
+                    stations = _load_subway_stations()
+                    nearby = find_nearby_stations(listing["latitude"], listing["longitude"], stations)
+
+                vs = compute_value_score(listing, medians, nearby)
+                embed = build_listing_embed(listing, value_score=vs)
+
+                success = send_discord_dm(bot_token, user_id, embed)
+                db_module.log_notification(user_id, listing["url"], "new_listing", success)
+                if success:
+                    total_sent += 1
+                time.sleep(1)
+
+        # --- Price drop DMs ---
+        if notif_settings.get("price_drops", True):
+            for drop_info in price_drops:
+                listing = drop_info["listing"]
+                if not listing_matches_user(listing, user):
+                    continue
+                listing_url = listing.get("url", "")
+                if db_module.was_notification_sent(user_id, listing_url, "price_drop"):
+                    continue
+
+                price_change = drop_info["price_change"]
+                dom = drop_info.get("days_on_market")
+                # Build price drop embed inline
+                address = listing.get("address", "Unknown")
+                old_price = price_change["old_price"]
+                new_price = price_change["new_price"]
+                savings = price_change["savings"]
+                pct = price_change["pct"]
+                neighborhood = listing.get("neighborhood", "N/A")
+
+                fields = [
+                    {"name": "💰 Price", "value": f"~~${old_price:,}~~ → **${new_price:,}**", "inline": True},
+                    {"name": "💵 Savings", "value": f"${savings:,}/mo ({pct}% off)", "inline": True},
+                    {"name": "📍 Neighborhood", "value": neighborhood, "inline": True},
+                ]
+                maps_url = build_google_maps_url(address)
+                fields.append({"name": "🗺️ Map", "value": f"[View on Google Maps]({maps_url})", "inline": True})
+                if dom is not None:
+                    dom_value = f"{dom} days"
+                    if dom >= 30:
+                        dom_value += " (may be negotiable!)"
+                    fields.append({"name": "📅 Days Tracked", "value": dom_value, "inline": True})
+
+                embed = {
+                    "title": f"📉 Price Drop! {address}",
+                    "url": listing_url,
+                    "color": 0xFF8C00,
+                    "fields": fields,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "footer": {"text": "NYC Apartment Tracker • Price Drop"},
+                }
+
+                success = send_discord_dm(bot_token, user_id, embed)
+                db_module.log_notification(user_id, listing_url, "price_drop", success)
+                if success:
+                    total_sent += 1
+                time.sleep(1)
+
+    log.info("Sent %d personalized DMs to %d users", total_sent, len(users))
+    return total_sent
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -971,7 +1170,9 @@ def run_scraper():
     # Load config
     config = load_config()
     search = config["search"]
-    neighborhoods = search["neighborhoods"]
+
+    # Scrape union of config neighborhoods + all user-subscribed neighborhoods
+    neighborhoods = get_neighborhoods_to_scrape(config)
     log.info("Config: %d neighborhoods, max $%s, beds=%s",
              len(neighborhoods), search["max_price"], search["bed_rooms"])
 
@@ -995,6 +1196,11 @@ def run_scraper():
     if is_first_run:
         log.info("First run detected — will send summary instead of individual notifications")
 
+    # Discord bot token (for per-user DMs)
+    bot_token = os.environ.get("DISCORD_BOT_TOKEN", "")
+    if bot_token and _use_mongodb():
+        log.info("Per-user DM notifications enabled (bot token + MongoDB)")
+
     # Scrape
     session = get_session(config)
     delay = config["scraper"]["request_delay_seconds"]
@@ -1002,6 +1208,7 @@ def run_scraper():
     price_drop_count = 0
     total_found = 0
     new_listings = []
+    price_drops = []  # Collected for per-user DMs
 
     # Pre-compute neighborhood medians for value scoring
     medians = compute_neighborhood_medians(seen)
@@ -1033,7 +1240,7 @@ def run_scraper():
                         del seen[url]
                         continue
 
-                if current_price is not None and webhook_url and not is_first_run:
+                if current_price is not None and not is_first_run:
                     change = detect_price_change(seen[url], current_price)
                     if change:
                         price_drop_count += 1
@@ -1047,10 +1254,18 @@ def run_scraper():
                             "url": url,
                             "neighborhood": seen[url].get("neighborhood", "N/A"),
                         }
-                        send_discord_price_drop(webhook_url, drop_listing, change,
-                                                config, days_on_market=dom)
+                        # Send webhook notification
+                        if webhook_url:
+                            send_discord_price_drop(webhook_url, drop_listing, change,
+                                                    config, days_on_market=dom)
+                            time.sleep(1)
+                        # Collect for per-user DMs
+                        price_drops.append({
+                            "listing": drop_listing,
+                            "price_change": change,
+                            "days_on_market": dom,
+                        })
                         update_price_history(seen[url], current_price)
-                        time.sleep(1)
                 continue
 
             # New listing — geoclient lookup for geo filtering + enrichment
@@ -1089,6 +1304,8 @@ def run_scraper():
                 if geo["latitude"] and geo["longitude"]:
                     seen_entry["latitude"] = geo["latitude"]
                     seen_entry["longitude"] = geo["longitude"]
+                    listing["latitude"] = geo["latitude"]
+                    listing["longitude"] = geo["longitude"]
                     stations = _load_subway_stations()
                     nearby = find_nearby_stations(geo["latitude"], geo["longitude"], stations)
                     if nearby:
@@ -1096,7 +1313,7 @@ def run_scraper():
 
             seen[url] = seen_entry
 
-            # Send Discord notification for non-first-run listings
+            # Send Discord webhook notification for non-first-run listings
             if not is_first_run and webhook_url:
                 vs = compute_value_score(listing, medians, nearby)
                 send_discord_notification(webhook_url, listing, config,
@@ -1107,6 +1324,13 @@ def run_scraper():
     if is_first_run and webhook_url and new_listings:
         send_discord_summary(webhook_url, new_listings, config)
         log.info("Sent first-run summary notification (%d listings)", len(new_listings))
+
+    # Send personalized DMs to subscribed users
+    if not is_first_run and bot_token and _use_mongodb():
+        dm_count = send_personalized_notifications(
+            new_listings, price_drops, seen, medians, bot_token,
+        )
+        log.info("Sent %d personalized DMs", dm_count)
 
     # Cleanup stale listings (before closing session)
     removed = cleanup_stale_listings(session, seen, config, geoclient_key)
@@ -1346,8 +1570,10 @@ def run_digest():
 
     config = load_config()
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
-    if not webhook_url:
-        log.error("DISCORD_WEBHOOK_URL not set — cannot send digest")
+    bot_token = os.environ.get("DISCORD_BOT_TOKEN", "")
+
+    if not webhook_url and not (bot_token and _use_mongodb()):
+        log.error("No notification method configured — cannot send digest")
         return
 
     seen = load_seen()
@@ -1368,8 +1594,75 @@ def run_digest():
 
     # Always send digest — analytics are valuable even with 0 new listings
     analytics = compute_digest_analytics(seen, recent)
-    send_discord_digest(webhook_url, recent, config, analytics=analytics)
-    log.info("Sent daily digest with %d new listings and analytics", len(recent))
+
+    # Send webhook digest (original behavior)
+    if webhook_url:
+        send_discord_digest(webhook_url, recent, config, analytics=analytics)
+        log.info("Sent daily digest with %d new listings and analytics", len(recent))
+
+    # Send per-user digest DMs
+    if bot_token and _use_mongodb():
+        import db as db_module
+        from models import listing_matches_user
+
+        users = db_module.get_all_subscribed_users()
+        dm_count = 0
+        for user in users:
+            notif_settings = user.get("notification_settings", {})
+            if not notif_settings.get("daily_digest", True):
+                continue
+
+            # Filter recent listings to those matching user preferences
+            user_recent = [l for l in recent if listing_matches_user(l, user)]
+            user_analytics = compute_digest_analytics(seen, user_recent)
+
+            # Build digest embed for this user
+            from datetime import datetime as _dt
+            today_str = _dt.now(timezone.utc).strftime("%b %d, %Y")
+
+            by_hood: dict[str, list[dict]] = {}
+            for entry in user_recent:
+                hood = entry.get("neighborhood", "Unknown") or "Unknown"
+                by_hood.setdefault(hood, []).append(entry)
+
+            hood_lines = []
+            for hood in sorted(by_hood, key=lambda h: -len(by_hood[h])):
+                entries = by_hood[hood]
+                prices = [parse_price(e.get("price", "")) for e in entries]
+                prices = [p for p in prices if p]
+                if prices:
+                    price_str = f"${min(prices):,}–${max(prices):,}" if len(prices) > 1 else f"${prices[0]:,}"
+                else:
+                    price_str = "N/A"
+                hood_lines.append(f"• **{hood}**: {len(entries)} listing(s) — {price_str}")
+
+            desc = f"**{len(user_recent)} new listing(s)** matching your filters in the last 24 hours.\n\n"
+            desc += "\n".join(hood_lines) if hood_lines else "No matching listings today."
+
+            if user_analytics.get("total_tracked"):
+                desc += f"\n\n**Total tracked**: {user_analytics['total_tracked']} listings"
+
+            if len(desc) > 4096:
+                desc = desc[:4093] + "..."
+
+            embed = {
+                "title": f"\U0001f4ca Daily Digest — {today_str}",
+                "description": desc,
+                "color": 0x3498DB,
+                "timestamp": _dt.now(timezone.utc).isoformat(),
+                "footer": {"text": "NYC Apartment Tracker • Daily Digest"},
+            }
+
+            user_id = user["discord_user_id"]
+            if db_module.was_notification_sent(user_id, f"digest-{today_str}", "daily_digest"):
+                continue
+            success = send_discord_dm(bot_token, user_id, embed)
+            db_module.log_notification(user_id, f"digest-{today_str}", "daily_digest", success)
+            if success:
+                dm_count += 1
+            time.sleep(1)
+
+        log.info("Sent %d per-user digest DMs", dm_count)
 
 
 def parse_args() -> argparse.Namespace:

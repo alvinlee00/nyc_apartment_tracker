@@ -45,6 +45,8 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ github.event.inputs.dry_run == 'true' && '' || secrets.DISCORD_WEBHOOK_URL }}
           NYC_GEOCLIENT_KEY: ${{ secrets.NYC_GEOCLIENT_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
         run: python apartment_tracker.py
 
       - name: Commit updated seen listings
@@ -76,4 +78,6 @@ jobs:
       - name: Send daily digest
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
         run: python apartment_tracker.py --digest
