@@ -236,6 +236,14 @@ def _build_welcome_embed() -> discord.Embed:
 
 @bot.tree.command(name="setup", description="Post the welcome panel in this channel")
 async def setup_command(interaction: discord.Interaction):
+    # Delete any existing welcome panels from the bot in this channel
+    async for msg in interaction.channel.history(limit=50):
+        if msg.author == bot.user and msg.embeds:
+            for embed in msg.embeds:
+                if embed.title and "NYC Apartment Tracker" in embed.title:
+                    await msg.delete()
+                    break
+
     embed = _build_welcome_embed()
     view = WelcomeView()
     await interaction.channel.send(embed=embed, view=view)
