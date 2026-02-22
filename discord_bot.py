@@ -17,7 +17,7 @@ from discord import app_commands
 from discord.ext import commands
 
 import db as db_module
-from models import VALID_NEIGHBORHOODS, DEFAULT_FILTERS, DEFAULT_NOTIFICATION_SETTINGS
+from models import VALID_NEIGHBORHOODS, DEFAULT_FILTERS, DEFAULT_NOTIFICATION_SETTINGS, MANHATTAN_AVENUES, avenue_for_longitude
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,12 +76,14 @@ def _build_settings_embed(user: dict, message: str | None = None) -> discord.Emb
 
     geo = filters.get("geo_bounds")
     if geo and geo.get("west_longitude") is not None:
+        west_ave = geo.get("west_avenue") or avenue_for_longitude(geo["west_longitude"]) or str(geo["west_longitude"])
+        east_ave = geo.get("east_avenue") or avenue_for_longitude(geo["east_longitude"]) or str(geo["east_longitude"])
         apply_to = geo.get("apply_to", [])
         if apply_to:
             hood_names = ", ".join(VALID_NEIGHBORHOODS.get(h, h) for h in apply_to)
-            geo_display = f"W: {geo['west_longitude']}, E: {geo['east_longitude']} ({hood_names} only)"
+            geo_display = f"{west_ave} → {east_ave} ({hood_names} only)"
         else:
-            geo_display = f"W: {geo['west_longitude']}, E: {geo['east_longitude']} (all)"
+            geo_display = f"{west_ave} → {east_ave} (all neighborhoods)"
     else:
         geo_display = "Off"
 
@@ -492,8 +494,27 @@ class SettingsView(discord.ui.View):
     @discord.ui.button(label="Geo Filter", style=discord.ButtonStyle.secondary, emoji="🗺️", row=1)
     async def geo_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         user = db_module.get_user(self.user_id)
-        modal = GeoFilterModal(self.user_id, user)
-        await interaction.response.send_modal(modal)
+        view = GeoFilterView(self.user_id, user)
+        geo = user.get("filters", {}).get("geo_bounds")
+        if geo and geo.get("west_longitude") is not None:
+            west_ave = geo.get("west_avenue") or avenue_for_longitude(geo["west_longitude"]) or "?"
+            east_ave = geo.get("east_avenue") or avenue_for_longitude(geo["east_longitude"]) or "?"
+            apply_to = geo.get("apply_to", [])
+            hood_names = ", ".join(VALID_NEIGHBORHOODS.get(h, h) for h in apply_to) if apply_to else "all"
+            current = f"**Current:** {west_ave} → {east_ave} (applies to: {hood_names})"
+        else:
+            current = "**Current:** Off (no geo filter set)"
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title="Geo Filter — Longitude Bounds",
+                description=f"{current}\n\n"
+                    "Filter listings by Manhattan avenue boundaries.\n"
+                    "Select your **west** and **east** avenue limits, "
+                    "then pick which neighborhoods this filter applies to.",
+                color=0x3498DB,
+            ),
+            view=view,
+        )
 
     @discord.ui.button(label="Done", style=discord.ButtonStyle.success, emoji="✅", row=1)
     async def done_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -702,97 +723,151 @@ class PriceRangeModal(discord.ui.Modal, title="Set Price Range"):
 # Geo filter modal
 # ---------------------------------------------------------------------------
 
-class GeoFilterModal(discord.ui.Modal, title="Set Geo Filter (Longitude Bounds)"):
+class GeoFilterView(discord.ui.View):
+    """Avenue-based geo filter with dropdowns for west/east boundary and neighborhood scope."""
+
     def __init__(self, user_id: str, user: dict):
-        super().__init__()
+        super().__init__(timeout=300)
         self.user_id = user_id
         geo = user.get("filters", {}).get("geo_bounds") or {}
-        self.west_input = discord.ui.TextInput(
-            label="West Longitude (e.g. -74.001 ~ 7th Ave)",
-            placeholder="-74.001",
-            default=str(geo.get("west_longitude", "")) if geo.get("west_longitude") is not None else "",
-            required=False,
-            max_length=12,
+        current_west = geo.get("west_longitude")
+        current_east = geo.get("east_longitude")
+        current_apply_to = set(geo.get("apply_to", []))
+
+        # Build avenue options (east to west, i.e. ascending longitude value)
+        ave_items = sorted(MANHATTAN_AVENUES.items(), key=lambda x: x[1], reverse=True)
+
+        west_options = []
+        for ave_name, lon in ave_items:
+            is_default = (current_west is not None and lon == current_west)
+            west_options.append(discord.SelectOption(
+                label=ave_name, value=ave_name, default=is_default,
+            ))
+        east_options = []
+        for ave_name, lon in ave_items:
+            is_default = (current_east is not None and lon == current_east)
+            east_options.append(discord.SelectOption(
+                label=ave_name, value=ave_name, default=is_default,
+            ))
+
+        self.west_select = discord.ui.Select(
+            placeholder="West boundary (e.g. 7th Avenue)",
+            options=west_options,
+            min_values=1, max_values=1, row=0,
         )
-        self.east_input = discord.ui.TextInput(
-            label="East Longitude (e.g. -73.983 ~ 1st Ave)",
-            placeholder="-73.983",
-            default=str(geo.get("east_longitude", "")) if geo.get("east_longitude") is not None else "",
-            required=False,
-            max_length=12,
+        self.east_select = discord.ui.Select(
+            placeholder="East boundary (e.g. 1st Avenue)",
+            options=east_options,
+            min_values=1, max_values=1, row=1,
         )
-        apply_to = geo.get("apply_to", [])
-        self.neighborhoods_input = discord.ui.TextInput(
-            label="Apply to neighborhoods (blank = all)",
-            placeholder="east-village, les",
-            default=", ".join(apply_to) if apply_to else "",
-            required=False,
-            max_length=200,
-            style=discord.TextStyle.short,
-        )
-        self.add_item(self.west_input)
-        self.add_item(self.east_input)
-        self.add_item(self.neighborhoods_input)
+        self.west_select.callback = self._noop
+        self.east_select.callback = self._noop
+        self.add_item(self.west_select)
+        self.add_item(self.east_select)
 
-    async def on_submit(self, interaction: discord.Interaction):
-        west_str = self.west_input.value.strip()
-        east_str = self.east_input.value.strip()
-        hoods_str = self.neighborhoods_input.value.strip()
+        # Neighborhood multi-select — only Manhattan neighborhoods make sense for geo filter
+        user_hoods = user.get("filters", {}).get("neighborhoods", [])
+        manhattan_slugs = {
+            "battery-park-city", "carnegie-hill", "chelsea", "chinatown", "civic-center",
+            "east-village", "financial-district", "flatiron", "fulton-seaport", "gramercy-park",
+            "greenwich-village", "hells-kitchen", "hudson-yards", "kips-bay", "lenox-hill",
+            "les", "little-italy", "manhattan-valley", "midtown", "midtown-east",
+            "midtown-south", "midtown-west", "murray-hill", "noho", "nolita",
+            "nomad", "soho", "stuyvesant-town", "tribeca", "two-bridges",
+            "upper-east-side", "upper-west-side", "west-village", "yorkville",
+            "east-harlem", "hamilton-heights", "harlem", "inwood",
+            "morningside-heights", "washington-heights",
+        }
+        # Show Manhattan neighborhoods the user is subscribed to
+        hood_options = []
+        for slug in sorted(user_hoods):
+            if slug in manhattan_slugs:
+                hood_options.append(discord.SelectOption(
+                    label=VALID_NEIGHBORHOODS.get(slug, slug),
+                    value=slug,
+                    default=slug in current_apply_to,
+                ))
+        if hood_options:
+            self.hood_select = discord.ui.Select(
+                placeholder="Apply to which neighborhoods? (blank = all)",
+                options=hood_options,
+                min_values=0, max_values=len(hood_options), row=2,
+            )
+            self.hood_select.callback = self._noop
+            self.add_item(self.hood_select)
+        else:
+            self.hood_select = None
 
-        # If both lon fields empty, clear the geo filter
-        if not west_str and not east_str:
-            db_module.update_user(self.user_id, {"filters.geo_bounds": None})
-            await interaction.response.send_message(
-                "Geo filter **removed** — all longitudes allowed.",
-                ephemeral=True,
+    async def _noop(self, interaction: discord.Interaction):
+        """Acknowledge select interactions without doing anything — save happens on button press."""
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Save Geo Filter", style=discord.ButtonStyle.success, emoji="💾", row=3)
+    async def save_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        west_values = self.west_select.values
+        east_values = self.east_select.values
+        if not west_values or not east_values:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Please select both a west and east avenue boundary.",
+                    color=0xE74C3C,
+                ),
+                view=self,
             )
             return
 
-        try:
-            west = float(west_str)
-            east = float(east_str)
-        except ValueError:
-            await interaction.response.send_message(
-                "Please enter valid numbers (e.g. -74.001).", ephemeral=True,
+        west_ave = west_values[0]
+        east_ave = east_values[0]
+        west_lon = MANHATTAN_AVENUES[west_ave]
+        east_lon = MANHATTAN_AVENUES[east_ave]
+
+        # West must be more negative (further west) than east
+        if west_lon > east_lon:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="Error",
+                    description=f"**{west_ave}** is east of **{east_ave}** — swap them!\n"
+                        "West boundary should be further west than east boundary.",
+                    color=0xE74C3C,
+                ),
+                view=self,
             )
             return
 
-        if west > east:
-            await interaction.response.send_message(
-                "West longitude must be less than east longitude.", ephemeral=True,
-            )
-            return
-
-        # Parse neighborhood slugs
-        apply_to = [h.strip() for h in hoods_str.split(",") if h.strip()] if hoods_str else []
-
-        # Validate neighborhood slugs
-        invalid = [h for h in apply_to if h not in VALID_NEIGHBORHOODS]
-        if invalid:
-            await interaction.response.send_message(
-                f"Unknown neighborhoods: **{', '.join(invalid)}**\n"
-                "Use slugs like `east-village`, `les`, `chelsea`.",
-                ephemeral=True,
-            )
-            return
+        apply_to = self.hood_select.values if self.hood_select else []
 
         geo_data = {
-            "west_longitude": west,
-            "east_longitude": east,
+            "west_longitude": west_lon,
+            "east_longitude": east_lon,
+            "west_avenue": west_ave,
+            "east_avenue": east_ave,
             "apply_to": apply_to,
         }
         db_module.update_user(self.user_id, {"filters.geo_bounds": geo_data})
 
         if apply_to:
             hood_names = ", ".join(VALID_NEIGHBORHOODS.get(h, h) for h in apply_to)
-            scope = f"Applies to: **{hood_names}**"
+            scope = f"Applies to: **{hood_names}** only"
         else:
             scope = "Applies to: **all neighborhoods**"
 
-        await interaction.response.send_message(
-            f"Geo filter updated: **W: {west}, E: {east}**\n{scope}",
-            ephemeral=True,
-        )
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user, f"Geo filter saved: **{west_ave} → {east_ave}**\n{scope}")
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+    @discord.ui.button(label="Clear Geo Filter", style=discord.ButtonStyle.danger, emoji="🗑️", row=3)
+    async def clear_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        db_module.update_user(self.user_id, {"filters.geo_bounds": None})
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user, "Geo filter **removed** — all longitudes allowed.")
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+    @discord.ui.button(label="Back to Settings", style=discord.ButtonStyle.secondary, row=4)
+    async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user)
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
 
 
 # ---------------------------------------------------------------------------

@@ -229,3 +229,37 @@ DEFAULT_NOTIFICATION_SETTINGS: dict = {
     "price_drops": True,
     "daily_digest": True,
 }
+
+
+# ---------------------------------------------------------------------------
+# Manhattan avenue → approximate longitude mapping (south of ~42nd St)
+# Used for user-friendly geo-filter UI instead of raw coordinates.
+# ---------------------------------------------------------------------------
+
+MANHATTAN_AVENUES: dict[str, float] = {
+    "Avenue D":          -73.974,
+    "Avenue C":          -73.978,
+    "Avenue B":          -73.980,
+    "Avenue A":          -73.984,
+    "1st Avenue":        -73.986,
+    "2nd Avenue":        -73.989,
+    "3rd Avenue":        -73.991,
+    "Lexington Avenue":  -73.994,
+    "Park Avenue":       -73.996,
+    "Madison Avenue":    -73.998,
+    "5th Avenue":        -74.000,
+    "6th Avenue":        -74.003,
+    "7th Avenue":        -74.006,
+    "8th Avenue":        -74.009,
+    "9th Avenue":        -74.012,
+    "10th Avenue":       -74.015,
+    "11th Avenue":       -74.018,
+}
+
+# Reverse lookup: longitude -> avenue name (for display)
+_LON_TO_AVENUE: dict[float, str] = {v: k for k, v in MANHATTAN_AVENUES.items()}
+
+
+def avenue_for_longitude(lon: float) -> str | None:
+    """Return the avenue name for a longitude, or None if no exact match."""
+    return _LON_TO_AVENUE.get(lon)
