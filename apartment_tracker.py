@@ -388,6 +388,76 @@ def scrape_neighborhood(session: ScraperSession, neighborhood: str, config: dict
 GEOCLIENT_BASE = "https://api.nyc.gov/geoclient/v2/address"
 
 
+def normalize_address(addr: str) -> str:
+    """Normalize an address for cross-source duplicate detection.
+
+    Lowercases, expands common abbreviations, strips unit suffixes,
+    and removes punctuation so that addresses from different sources
+    can be compared as canonical strings.
+
+    Examples:
+        "123 E 21st St #3H"  → "123 east 21st street"
+        "123 East 21st Street Apt 3H" → "123 east 21st street"
+    """
+    s = addr.lower().strip()
+
+    # Strip unit/apt suffixes (e.g. "#3H", "Apt 4B", "Unit 5C", ", Floor 2")
+    s = re.sub(r"[,\s]*(?:#|apt\.?|unit|floor|fl\.?)\s*\S+$", "", s, flags=re.IGNORECASE).strip()
+    # Also strip bare #suffix with no keyword
+    s = re.sub(r"\s*#\S+$", "", s).strip()
+
+    # Directional prefix expansions: must come before abbreviation expansions
+    # Match whole word only (word boundary after the abbreviation)
+    s = re.sub(r"\be\b\s+", "east ", s)
+    s = re.sub(r"\bw\b\s+", "west ", s)
+    s = re.sub(r"\bn\b\s+", "north ", s)
+    s = re.sub(r"\bs\b\s+", "south ", s)
+
+    # Street type abbreviations (whole word)
+    _abbrevs = [
+        (r"\bst\b", "street"),
+        (r"\bave?\b", "avenue"),
+        (r"\bblvd\b", "boulevard"),
+        (r"\brd\b", "road"),
+        (r"\bdr\b", "drive"),
+        (r"\bpl\b", "place"),
+        (r"\bct\b", "court"),
+        (r"\bln\b", "lane"),
+        (r"\bpkwy\b", "parkway"),
+        (r"\bhwy\b", "highway"),
+        (r"\bterr?\b", "terrace"),
+    ]
+    for pattern, replacement in _abbrevs:
+        s = re.sub(pattern, replacement, s)
+
+    # Remove remaining punctuation (commas, periods, etc.) but keep spaces/digits/letters
+    s = re.sub(r"[^\w\s]", "", s)
+    # Collapse multiple spaces
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def find_cross_source_duplicate(listing: dict, seen: dict) -> str | None:
+    """Check if a listing from a different source already exists in seen.
+
+    Compares by canonical_address. Returns the existing URL (primary key)
+    if a match is found, or None if this is a genuinely new listing.
+    """
+    candidate = listing.get("canonical_address")
+    if not candidate:
+        candidate = normalize_address(listing.get("address", ""))
+    if not candidate:
+        return None
+
+    for url, entry in seen.items():
+        existing_canonical = entry.get("canonical_address")
+        if not existing_canonical:
+            continue
+        if existing_canonical == candidate:
+            return url
+    return None
+
+
 def _parse_address_for_geoclient(address: str) -> tuple[str, str] | None:
     """Extract (house_number, street) from a StreetEasy address like '337 East 21st Street #3H'.
 
@@ -639,7 +709,12 @@ def cleanup_stale_listings(
                 removed += 1
                 continue
 
-        status = check_listing_status(session, url)
+        source = entry.get("source", "streeteasy")
+        if source == "renthop":
+            from renthop_scraper import check_renthop_listing_status
+            status = check_renthop_listing_status(session, url)
+        else:
+            status = check_listing_status(session, url)
         if status == "gone":
             log.info("REMOVING (rented/gone): %s — %s", entry.get("address", "?"), url)
             del seen[url]
@@ -882,13 +957,15 @@ def build_listing_embed(listing: dict, days_on_market: int | None = None,
         fields.append({"name": "📊 Value Score", "value": f"{score}/10 (Grade: {grade})", "inline": True})
         embed_color = value_score.get("color", embed_color)
 
+    source = listing.get("source", "streeteasy")
+    source_label = "RentHop" if source == "renthop" else "StreetEasy"
     embed = {
         "title": f"🏠 {address}",
         "url": url,
         "color": embed_color,
         "fields": fields,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "footer": {"text": "NYC Apartment Tracker • StreetEasy"},
+        "footer": {"text": f"NYC Apartment Tracker • {source_label}"},
     }
 
     if image_url and image_url.startswith("http"):
@@ -1296,6 +1373,8 @@ def run_scraper():
                 "address": listing["address"],
                 "price": listing["price"],
                 "neighborhood": listing.get("neighborhood", ""),
+                "source": "streeteasy",
+                "canonical_address": normalize_address(listing["address"]),
             }
 
             # Enrich with geo data
@@ -1320,6 +1399,105 @@ def run_scraper():
                 send_discord_notification(webhook_url, listing, config,
                                           days_on_market=None, value_score=vs)
                 time.sleep(1)  # Rate-limit Discord messages
+
+    # ---------------------------------------------------------------------------
+    # RentHop scraping
+    # ---------------------------------------------------------------------------
+    from renthop_scraper import scrape_renthop_neighborhood, RENTHOP_AREA_MAP
+
+    # Detect first RentHop run: no existing entries have source="renthop"
+    is_first_renthop_run = not any(v.get("source") == "renthop" for v in seen.values())
+    if is_first_renthop_run:
+        log.info("First RentHop run detected — will seed listings without notifications")
+
+    rh_seeded = 0
+    rh_linked = 0
+    rh_new = 0
+
+    for i, neighborhood in enumerate(neighborhoods):
+        if neighborhood not in RENTHOP_AREA_MAP:
+            continue
+        time.sleep(delay)
+
+        rh_listings = scrape_renthop_neighborhood(session, neighborhood, config)
+        total_found += len(rh_listings)
+
+        for listing in rh_listings:
+            url = listing["url"]
+
+            # Already seen on RentHop (URL match) — just refresh timestamp
+            if url in seen:
+                seen[url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+                if "source" not in seen[url]:
+                    seen[url]["source"] = "renthop"
+                continue
+
+            # RentHop provides lat/lon directly — apply geo bounds filter
+            longitude = listing.get("longitude")
+            if not is_within_geo_bounds(longitude, config):
+                log.info("FILTERED RentHop (geo bounds): %s — lon=%.4f",
+                         listing["address"], longitude)
+                continue
+
+            # Compute canonical address for cross-source dedup
+            listing["canonical_address"] = normalize_address(listing["address"])
+
+            # Cross-source dedup: same apartment already tracked via StreetEasy?
+            dup_url = find_cross_source_duplicate(listing, seen)
+            if dup_url:
+                # Link RentHop URL into the existing StreetEasy entry
+                alt_urls = seen[dup_url].get("alt_urls", {})
+                alt_urls["renthop"] = url
+                seen[dup_url]["alt_urls"] = alt_urls
+                seen[dup_url]["last_scraped"] = datetime.now(timezone.utc).isoformat()
+                rh_linked += 1
+                log.debug("RentHop duplicate of SE listing: %s ↔ %s", dup_url, url)
+                continue
+
+            # Enrich with subway info using coordinates from RentHop card
+            if listing.get("latitude") and listing.get("longitude"):
+                stations = _load_subway_stations()
+                nearby = find_nearby_stations(listing["latitude"], listing["longitude"], stations)
+                if nearby:
+                    listing["subway_info"] = _format_subway_field(nearby)
+            else:
+                nearby = None
+
+            # Genuinely new RentHop listing
+            seen_entry = {
+                "first_seen": datetime.now(timezone.utc).isoformat(),
+                "last_scraped": datetime.now(timezone.utc).isoformat(),
+                "address": listing["address"],
+                "price": listing["price"],
+                "neighborhood": listing.get("neighborhood", ""),
+                "source": "renthop",
+                "canonical_address": listing["canonical_address"],
+            }
+            if listing.get("latitude"):
+                seen_entry["latitude"] = listing["latitude"]
+                seen_entry["longitude"] = listing["longitude"]
+            seen[url] = seen_entry
+
+            if is_first_renthop_run:
+                # Seed only — no notifications on first RentHop run
+                rh_seeded += 1
+            else:
+                # Normal run — notify as new listing
+                new_count += 1
+                rh_new += 1
+                new_listings.append(listing)
+                log.info("NEW (RentHop): %s — %s — %s",
+                         listing["price"], listing["address"], listing["neighborhood"])
+
+                if not is_first_run and webhook_url and not (bot_token and _use_mongodb()):
+                    vs = compute_value_score(listing, medians, nearby)
+                    send_discord_notification(webhook_url, listing, config,
+                                              days_on_market=None, value_score=vs)
+                    time.sleep(1)
+
+    if is_first_renthop_run and rh_seeded > 0:
+        log.info("First RentHop run: seeded %d listings, linked %d as StreetEasy duplicates",
+                 rh_seeded, rh_linked)
 
     # On first run, send a single summary instead (only if no personalized DMs)
     if is_first_run and webhook_url and new_listings and not (bot_token and _use_mongodb()):

@@ -54,8 +54,9 @@ def ensure_indexes():
     """Create indexes and TTL expiry on first run."""
     db = get_db()
 
-    # seen_listings: unique on url
+    # seen_listings: unique on url; secondary index on canonical_address for cross-source dedup
     db.seen_listings.create_index("url", unique=True)
+    db.seen_listings.create_index("canonical_address")
 
     # user_preferences: unique on discord_user_id
     db.user_preferences.create_index("discord_user_id", unique=True)

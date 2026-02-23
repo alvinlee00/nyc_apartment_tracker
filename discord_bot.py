@@ -136,7 +136,7 @@ class WelcomeView(discord.ui.View):
         embed = discord.Embed(
             title="You're subscribed!",
             description=(
-                "You'll now receive personalized apartment DMs.\n\n"
+                "You'll now receive personalized apartment DMs from StreetEasy and RentHop.\n\n"
                 "Click **Settings** below to configure your neighborhoods, "
                 "price range, and bed types.\n\n"
                 "By default, you'll get notifications for all neighborhoods up to $5,000/mo."
@@ -221,13 +221,13 @@ def _build_welcome_embed() -> discord.Embed:
     return discord.Embed(
         title="🏠 NYC Apartment Tracker",
         description=(
-            "Get personalized StreetEasy apartment alerts delivered straight to your DMs!\n\n"
+            "Get personalized apartment alerts from **StreetEasy** and **RentHop** delivered straight to your DMs!\n\n"
             "**How it works:**\n"
             "1. Click **Subscribe** to sign up\n"
             "2. Click **Settings** to pick your neighborhoods, price range, and bed types\n"
-            "3. Sit back — you'll get DMs when matching listings appear\n\n"
+            "3. Sit back — you'll get DMs when matching listings appear on either platform\n\n"
             "**Features:**\n"
-            "• New listing alerts matching your filters\n"
+            "• New listing alerts matching your filters (StreetEasy + RentHop)\n"
             "• Price drop notifications\n"
             "• Daily market digest\n"
             "• Value scores and nearby subway info"
@@ -284,7 +284,7 @@ async def subscribe(interaction: discord.Interaction):
     embed = discord.Embed(
         title="Welcome to NYC Apartment Tracker!",
         description=(
-            "You're now subscribed to personalized apartment notifications.\n\n"
+            "You're now subscribed to personalized apartment notifications from StreetEasy and RentHop.\n\n"
             "**Next steps:**\n"
             "• Use `/settings` to configure your neighborhoods, price range, and bed types\n"
             "• Use `/status` to view your current filters\n"
