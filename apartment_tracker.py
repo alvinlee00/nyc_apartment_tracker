@@ -1112,6 +1112,46 @@ def send_discord_dm(bot_token: str, user_id: str, embed: dict) -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Push API dispatch (iOS backend)
+# ---------------------------------------------------------------------------
+
+def send_push_via_api(
+    new_listings: list[dict],
+    price_drops: list[dict],
+) -> int | None:
+    """POST new listings and price drops to the backend push-dispatch endpoint.
+
+    Only called when PUSH_API_URL is set. Returns the number of pushes sent,
+    or None on failure.
+    """
+    api_url = os.environ.get("PUSH_API_URL", "")
+    api_secret = os.environ.get("PUSH_API_SECRET", "")
+    if not api_url:
+        return None
+
+    payload = {
+        "listings": new_listings,
+        "price_drops": price_drops,
+    }
+    try:
+        resp = requests.post(
+            f"{api_url.rstrip('/')}/internal/push-dispatch",
+            json=payload,
+            headers={"X-API-Secret": api_secret},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        sent = data.get("pushes_sent", 0)
+        log.info("Push API: %d pushes sent to %d devices",
+                 sent, data.get("devices_notified", 0))
+        return sent
+    except Exception as e:
+        log.error("Push API dispatch failed: %s", e)
+        return None
+
+
 def get_neighborhoods_to_scrape(config: dict) -> list[str]:
     """Return union of config neighborhoods + all user-subscribed neighborhoods."""
     neighborhoods = set(config["search"]["neighborhoods"])
@@ -1510,6 +1550,12 @@ def run_scraper():
             new_listings, price_drops, seen, medians, bot_token,
         )
         log.info("Sent %d personalized DMs", dm_count)
+
+    # Dispatch push notifications to iOS backend
+    if not is_first_run and os.environ.get("PUSH_API_URL"):
+        push_count = send_push_via_api(new_listings, price_drops)
+        if push_count is not None:
+            log.info("Sent %d push notifications via API", push_count)
 
     # Cleanup stale listings (before closing session)
     removed = cleanup_stale_listings(session, seen, config, geoclient_key)

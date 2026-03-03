@@ -192,6 +192,23 @@ def delete_user(discord_user_id: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# device_preferences CRUD (iOS app)
+# ---------------------------------------------------------------------------
+
+def _device_col() -> Collection:
+    return get_db().device_preferences
+
+
+def get_all_subscribed_devices() -> list[dict]:
+    """Get all devices with subscribed=True and a valid APNs token."""
+    devices = []
+    for doc in _device_col().find({"subscribed": True, "apns_token": {"$exists": True, "$ne": ""}}):
+        doc.pop("_id", None)
+        devices.append(doc)
+    return devices
+
+
+# ---------------------------------------------------------------------------
 # notification_log CRUD
 # ---------------------------------------------------------------------------
 
