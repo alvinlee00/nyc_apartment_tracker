@@ -33,5 +33,13 @@
     "min_price": 0,
     "bed_rooms": [],
     "no_fee": false
+  },
+  "subway_preferences": {
+    "long-island-city": {
+      "preferred_stations": [
+        {"name": "Queensboro Plaza", "weight": 2.0},
+        {"name": "Court Sq", "weight": 1.0}
+      ]
+    }
   }
 }

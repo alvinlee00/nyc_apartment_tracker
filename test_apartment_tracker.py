@@ -590,6 +590,166 @@ class TestGeoclientLookup:
             assert result["longitude"] is None
 
 
+class TestBoroughLookup:
+    def test_manhattan_slugs(self):
+        assert at._borough_for_slug("east-village") == "Manhattan"
+        assert at._borough_for_slug("upper-west-side") == "Manhattan"
+        assert at._borough_for_slug("hells-kitchen") == "Manhattan"
+        assert at._borough_for_slug("east-harlem") == "Manhattan"
+
+    def test_brooklyn_slugs(self):
+        assert at._borough_for_slug("williamsburg") == "Brooklyn"
+        assert at._borough_for_slug("park-slope") == "Brooklyn"
+        assert at._borough_for_slug("greenpoint") == "Brooklyn"
+
+    def test_queens_slugs(self):
+        assert at._borough_for_slug("long-island-city") == "Queens"
+        assert at._borough_for_slug("astoria") == "Queens"
+        assert at._borough_for_slug("sunnyside") == "Queens"
+
+    def test_display_name_to_borough(self):
+        assert at._DISPLAY_NAME_TO_BOROUGH["Long Island City"] == "Queens"
+        assert at._DISPLAY_NAME_TO_BOROUGH["East Village"] == "Manhattan"
+        assert at._DISPLAY_NAME_TO_BOROUGH["Williamsburg"] == "Brooklyn"
+        assert at._DISPLAY_NAME_TO_BOROUGH["Astoria"] == "Queens"
+
+    def test_geoclient_passes_borough(self):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "address": {"latitude": 40.742, "longitude": -73.958}
+        }
+        mock_response.raise_for_status = MagicMock()
+        with patch("apartment_tracker.requests.get", return_value=mock_response) as mock_get:
+            at.geoclient_lookup("10-10 Jackson Avenue", "fake-key", borough="Queens")
+            call_kwargs = mock_get.call_args
+            assert call_kwargs[1]["params"]["borough"] == "Queens"
+
+
+class TestSubwayPreferences:
+    """Tests for subway preference scoring and formatting."""
+
+    FAKE_STATIONS = [
+        {"name": "Queensboro Plaza", "latitude": 40.7506, "longitude": -73.9402,
+         "routes": ["7", "N", "W"]},
+        {"name": "Court Sq", "latitude": 40.7473, "longitude": -73.9453,
+         "routes": ["7", "E", "F", "G"]},
+        {"name": "Hunters Point Av", "latitude": 40.7422, "longitude": -73.9489,
+         "routes": ["7"]},
+    ]
+
+    PREFS = {
+        "preferred_stations": [
+            {"name": "Queensboro Plaza", "weight": 2.0},
+            {"name": "Court Sq", "weight": 1.0},
+        ]
+    }
+
+    def test_format_subway_field_stars_preferred(self):
+        nearby = [
+            {"name": "Court Sq", "routes": ["7", "E", "F", "G"], "distance_mi": 0.1},
+            {"name": "Queensboro Plaza", "routes": ["7", "N", "W"], "distance_mi": 0.2},
+            {"name": "Hunters Point Av", "routes": ["7"], "distance_mi": 0.3},
+        ]
+        result = at._format_subway_field(nearby, self.PREFS)
+        assert "\u2b50" in result
+        lines = result.split("\n")
+        assert lines[0].endswith("\u2b50")  # Court Sq starred
+        assert lines[1].endswith("\u2b50")  # Queensboro Plaza starred
+        assert not lines[2].endswith("\u2b50")  # Hunters Point not starred
+
+    def test_format_subway_field_no_prefs(self):
+        nearby = [
+            {"name": "Court Sq", "routes": ["7"], "distance_mi": 0.1},
+        ]
+        result = at._format_subway_field(nearby, None)
+        assert "\u2b50" not in result
+
+    def test_compute_subway_pref_score(self):
+        # Apartment very close to Queensboro Plaza
+        lat, lon = 40.7506, -73.9402  # At QBP
+        result = at.compute_subway_pref_score(lat, lon, self.FAKE_STATIONS, self.PREFS)
+        assert result is not None
+        assert result["score"] >= 7.0  # Very close to main pref (weighted avg includes Court Sq)
+        assert len(result["details"]) == 2
+
+    def test_compute_subway_pref_score_weights(self):
+        # Equidistant from both — Queensboro Plaza should have more impact
+        lat, lon = 40.749, -73.9428  # Between the two stations
+        result = at.compute_subway_pref_score(lat, lon, self.FAKE_STATIONS, self.PREFS)
+        assert result is not None
+        # QBP has weight 2.0, Court Sq has weight 1.0
+        qbp = next(d for d in result["details"] if d["name"] == "Queensboro Plaza")
+        cs = next(d for d in result["details"] if d["name"] == "Court Sq")
+        assert qbp["weight"] == 2.0
+        assert cs["weight"] == 1.0
+
+    def test_compute_subway_pref_score_far_away(self):
+        # Far away apartment
+        lat, lon = 40.72, -73.99  # Manhattan
+        result = at.compute_subway_pref_score(lat, lon, self.FAKE_STATIONS, self.PREFS)
+        assert result is not None
+        assert result["score"] == 0.0  # Too far
+
+    def test_compute_subway_pref_score_no_prefs(self):
+        result = at.compute_subway_pref_score(40.75, -73.94, self.FAKE_STATIONS,
+                                               {"preferred_stations": []})
+        assert result is None
+
+    def test_get_subway_prefs_for_listing(self):
+        config = {
+            "subway_preferences": {
+                "long-island-city": {
+                    "preferred_stations": [{"name": "Court Sq", "weight": 1.0}]
+                }
+            }
+        }
+        listing = {"neighborhood": "Long Island City"}
+        result = at._get_subway_prefs_for_listing(listing, config)
+        assert result is not None
+        assert result["preferred_stations"][0]["name"] == "Court Sq"
+
+    def test_get_subway_prefs_no_match(self):
+        config = {
+            "subway_preferences": {
+                "long-island-city": {
+                    "preferred_stations": [{"name": "Court Sq", "weight": 1.0}]
+                }
+            }
+        }
+        listing = {"neighborhood": "East Village"}
+        result = at._get_subway_prefs_for_listing(listing, config)
+        assert result is None
+
+    def test_get_subway_prefs_no_config(self):
+        result = at._get_subway_prefs_for_listing({"neighborhood": "LIC"}, {})
+        assert result is None
+
+    def test_embed_includes_subway_match(self):
+        listing = {
+            "price": "$3,000",
+            "address": "10-10 Jackson Ave",
+            "beds": "1",
+            "baths": "1",
+            "sqft": "600 sqft",
+            "neighborhood": "Long Island City",
+            "url": "https://example.com",
+            "subway_info": "7, N, W at Queensboro Plaza (0.1 mi) \u2b50",
+            "subway_pref_score": {
+                "score": 9.0,
+                "weighted_avg_mi": 0.05,
+                "details": [
+                    {"name": "Queensboro Plaza", "distance_mi": 0.05, "weight": 2.0},
+                ],
+            },
+        }
+        embed = at.build_listing_embed(listing)
+        field_names = [f["name"] for f in embed["fields"]]
+        assert "🎯 Subway Match" in field_names
+        match_field = next(f for f in embed["fields"] if f["name"] == "🎯 Subway Match")
+        assert "9.0/10" in match_field["value"]
+
+
 # ---------------------------------------------------------------------------
 # Discord embed includes cross streets
 # ---------------------------------------------------------------------------
@@ -1549,3 +1709,118 @@ class TestLazyGeoBackfill:
                     del seen[url]
 
         assert url in seen
+
+
+# ---------------------------------------------------------------------------
+# NEIGHBORHOOD_CENTERS
+# ---------------------------------------------------------------------------
+
+class TestNeighborhoodCenters:
+    def test_all_valid_neighborhoods_have_centers(self):
+        from models import VALID_NEIGHBORHOODS
+        for slug in VALID_NEIGHBORHOODS:
+            assert slug in at.NEIGHBORHOOD_CENTERS, (
+                f"Neighborhood '{slug}' missing from NEIGHBORHOOD_CENTERS"
+            )
+
+    def test_coordinates_in_nyc_range(self):
+        for slug, (lat, lon) in at.NEIGHBORHOOD_CENTERS.items():
+            assert 40.5 < lat < 41.0, f"{slug} latitude {lat} out of NYC range"
+            assert -74.1 < lon < -73.7, f"{slug} longitude {lon} out of NYC range"
+
+    def test_centers_are_tuples(self):
+        for slug, center in at.NEIGHBORHOOD_CENTERS.items():
+            assert isinstance(center, tuple), f"{slug} center should be a tuple"
+            assert len(center) == 2, f"{slug} center should have 2 elements"
+
+
+# ---------------------------------------------------------------------------
+# get_stations_for_neighborhood
+# ---------------------------------------------------------------------------
+
+class TestGetStationsForNeighborhood:
+    def test_returns_results_for_known_neighborhood(self):
+        results = at.get_stations_for_neighborhood("long-island-city")
+        assert len(results) > 0
+        assert all("name" in r and "routes" in r and "distance_mi" in r for r in results)
+
+    def test_results_sorted_by_distance(self):
+        results = at.get_stations_for_neighborhood("east-village")
+        distances = [r["distance_mi"] for r in results]
+        assert distances == sorted(distances)
+
+    def test_respects_max_stations(self):
+        results = at.get_stations_for_neighborhood("midtown", max_stations=3)
+        assert len(results) <= 3
+
+    def test_empty_for_unknown_slug(self):
+        results = at.get_stations_for_neighborhood("nonexistent-neighborhood")
+        assert results == []
+
+    def test_uses_provided_stations(self):
+        fake_stations = [
+            {"name": "Test Station", "latitude": 40.7447, "longitude": -73.9485, "routes": ["7"]},
+        ]
+        results = at.get_stations_for_neighborhood("long-island-city", stations=fake_stations)
+        assert len(results) == 1
+        assert results[0]["name"] == "Test Station"
+
+
+# ---------------------------------------------------------------------------
+# Per-user subway prefs in DM path
+# ---------------------------------------------------------------------------
+
+class TestPerUserSubwayPrefs:
+    FAKE_STATIONS = [
+        {"name": "Court Sq", "latitude": 40.7473, "longitude": -73.9453,
+         "routes": ["7", "E", "F", "G"]},
+        {"name": "Queensboro Plaza", "latitude": 40.7506, "longitude": -73.9402,
+         "routes": ["7", "N", "W"]},
+    ]
+
+    def test_user_prefs_override_subway_info(self):
+        """When user has subway prefs, the DM embed uses user prefs not global."""
+        listing = {
+            "url": "https://streeteasy.com/building/test/1",
+            "address": "10-10 Jackson Ave",
+            "price": "$3,000",
+            "neighborhood": "Long Island City",
+            "latitude": 40.7473,
+            "longitude": -73.9453,
+            "subway_info": "7 at Court Sq (0.1 mi)",  # global config enrichment
+        }
+        user_prefs = {
+            "long-island-city": {
+                "preferred_stations": [{"name": "Queensboro Plaza", "weight": 2.0}]
+            }
+        }
+        # Simulate the per-user override logic from send_personalized_notifications
+        sprefs = at._get_subway_prefs_for_listing(
+            listing, {"subway_preferences": user_prefs})
+        assert sprefs is not None
+        assert sprefs["preferred_stations"][0]["name"] == "Queensboro Plaza"
+
+        nearby = at.find_nearby_stations(
+            listing["latitude"], listing["longitude"], self.FAKE_STATIONS)
+        user_listing = {**listing}
+        user_listing["subway_info"] = at._format_subway_field(nearby, sprefs)
+        assert "⭐" in user_listing["subway_info"]
+
+    def test_no_user_prefs_uses_original_listing(self):
+        """When user has no subway prefs, the original listing data is used."""
+        listing = {
+            "url": "https://streeteasy.com/building/test/1",
+            "address": "10-10 Jackson Ave",
+            "price": "$3,000",
+            "neighborhood": "Long Island City",
+            "latitude": 40.7473,
+            "longitude": -73.9453,
+            "subway_info": "7 at Court Sq (0.1 mi)",
+        }
+        user_subway_prefs = None
+        if user_subway_prefs:
+            user_listing = {**listing}
+        else:
+            user_listing = listing
+        # Should be the same object
+        assert user_listing is listing

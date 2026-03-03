@@ -282,3 +282,46 @@ class TestValidNeighborhoods:
         assert VALID_NEIGHBORHOODS["east-village"] == "East Village"
         assert VALID_NEIGHBORHOODS["les"] == "Lower East Side"
         assert VALID_NEIGHBORHOODS["bed-stuy"] == "Bedford-Stuyvesant"
+
+
+# ---------------------------------------------------------------------------
+# subway_preferences in filters doesn't affect matching
+# ---------------------------------------------------------------------------
+
+class TestSubwayPreferencesNoEffect:
+    def test_subway_prefs_ignored_in_matching(self):
+        """subway_preferences is for display/scoring only — should not affect listing_matches_user."""
+        user = {
+            "filters": {
+                "neighborhoods": ["long-island-city"],
+                "min_price": 0,
+                "max_price": 5000,
+                "bed_rooms": [],
+                "no_fee": False,
+                "geo_bounds": None,
+                "subway_preferences": {
+                    "long-island-city": {
+                        "preferred_stations": [
+                            {"name": "Court Sq", "weight": 2.0},
+                        ]
+                    }
+                },
+            }
+        }
+        listing = _listing(neighborhood="Long Island City", price="$3,000")
+        assert listing_matches_user(listing, user) is True
+
+    def test_subway_prefs_none_still_matches(self):
+        user = {
+            "filters": {
+                "neighborhoods": ["east-village"],
+                "min_price": 0,
+                "max_price": 5000,
+                "bed_rooms": [],
+                "no_fee": False,
+                "geo_bounds": None,
+                "subway_preferences": None,
+            }
+        }
+        listing = _listing(neighborhood="East Village", price="$3,000")
+        assert listing_matches_user(listing, user) is True

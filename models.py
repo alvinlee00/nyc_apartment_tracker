@@ -222,6 +222,7 @@ DEFAULT_FILTERS: dict = {
     "bed_rooms": [],
     "no_fee": False,
     "geo_bounds": None,
+    "subway_preferences": None,
 }
 
 DEFAULT_NOTIFICATION_SETTINGS: dict = {

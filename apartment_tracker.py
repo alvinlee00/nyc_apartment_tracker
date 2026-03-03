@@ -107,6 +107,118 @@ NEIGHBORHOOD_ALIASES: dict[str, set[str]] = {
     "long-island-city": {"Long Island City"},
 }
 
+# Borough lookup for Geoclient API — must send the correct borough for non-Manhattan areas
+_BROOKLYN_SLUGS = {
+    "bay-ridge", "bed-stuy", "boerum-hill", "brooklyn-heights", "bushwick",
+    "carroll-gardens", "clinton-hill", "cobble-hill", "crown-heights",
+    "downtown-brooklyn", "dumbo", "flatbush", "fort-greene", "gowanus",
+    "greenpoint", "kensington", "park-slope", "prospect-heights",
+    "red-hook", "sunset-park", "williamsburg", "windsor-terrace",
+}
+_QUEENS_SLUGS = {
+    "astoria", "flushing", "forest-hills", "jackson-heights",
+    "long-island-city", "ridgewood", "sunnyside", "woodside",
+}
+
+
+def _borough_for_slug(slug: str) -> str:
+    """Return the NYC borough for a neighborhood slug."""
+    if slug in _BROOKLYN_SLUGS:
+        return "Brooklyn"
+    if slug in _QUEENS_SLUGS:
+        return "Queens"
+    return "Manhattan"
+
+
+# Build display-name-to-borough mapping from NEIGHBORHOOD_ALIASES
+_DISPLAY_NAME_TO_BOROUGH: dict[str, str] = {}
+for _slug, _aliases in NEIGHBORHOOD_ALIASES.items():
+    _borough = _borough_for_slug(_slug)
+    for _alias in _aliases:
+        _DISPLAY_NAME_TO_BOROUGH[_alias] = _borough
+
+
+# ---------------------------------------------------------------------------
+# Neighborhood center coordinates (approximate centroid for station lookups)
+# ---------------------------------------------------------------------------
+
+NEIGHBORHOOD_CENTERS: dict[str, tuple[float, float]] = {
+    # Manhattan
+    "battery-park-city": (40.7115, -74.0154),
+    "carnegie-hill": (40.7847, -73.9560),
+    "chelsea": (40.7465, -74.0014),
+    "chinatown": (40.7158, -73.9970),
+    "civic-center": (40.7138, -74.0027),
+    "east-village": (40.7265, -73.9815),
+    "financial-district": (40.7075, -74.0089),
+    "flatiron": (40.7401, -73.9903),
+    "fulton-seaport": (40.7069, -74.0030),
+    "gramercy-park": (40.7368, -73.9845),
+    "greenwich-village": (40.7336, -73.9985),
+    "hells-kitchen": (40.7638, -73.9918),
+    "hudson-yards": (40.7542, -74.0005),
+    "kips-bay": (40.7422, -73.9802),
+    "lenox-hill": (40.7675, -73.9602),
+    "les": (40.7153, -73.9840),
+    "little-italy": (40.7191, -73.9973),
+    "manhattan-valley": (40.7975, -73.9618),
+    "midtown": (40.7549, -73.9840),
+    "midtown-east": (40.7550, -73.9720),
+    "midtown-south": (40.7485, -73.9840),
+    "midtown-west": (40.7595, -73.9895),
+    "murray-hill": (40.7478, -73.9758),
+    "noho": (40.7270, -73.9932),
+    "nolita": (40.7230, -73.9952),
+    "nomad": (40.7440, -73.9882),
+    "soho": (40.7233, -74.0000),
+    "stuyvesant-town": (40.7316, -73.9778),
+    "tribeca": (40.7163, -74.0086),
+    "two-bridges": (40.7118, -73.9880),
+    "upper-east-side": (40.7736, -73.9566),
+    "upper-west-side": (40.7870, -73.9754),
+    "west-village": (40.7336, -74.0027),
+    "yorkville": (40.7762, -73.9495),
+    # Brooklyn
+    "bay-ridge": (40.6345, -74.0286),
+    "bed-stuy": (40.6872, -73.9418),
+    "boerum-hill": (40.6848, -73.9840),
+    "brooklyn-heights": (40.6960, -73.9936),
+    "bushwick": (40.6944, -73.9213),
+    "carroll-gardens": (40.6795, -73.9991),
+    "clinton-hill": (40.6893, -73.9663),
+    "cobble-hill": (40.6866, -73.9963),
+    "crown-heights": (40.6694, -73.9530),
+    "downtown-brooklyn": (40.6930, -73.9867),
+    "dumbo": (40.7033, -73.9880),
+    "flatbush": (40.6518, -73.9590),
+    "fort-greene": (40.6920, -73.9745),
+    "gowanus": (40.6738, -73.9880),
+    "greenpoint": (40.7274, -73.9510),
+    "kensington": (40.6391, -73.9729),
+    "park-slope": (40.6710, -73.9814),
+    "prospect-heights": (40.6775, -73.9690),
+    "red-hook": (40.6737, -74.0082),
+    "sunset-park": (40.6455, -74.0090),
+    "williamsburg": (40.7081, -73.9571),
+    "windsor-terrace": (40.6537, -73.9759),
+    # Queens
+    "astoria": (40.7720, -73.9230),
+    "flushing": (40.7654, -73.8318),
+    "forest-hills": (40.7188, -73.8448),
+    "jackson-heights": (40.7498, -73.8830),
+    "long-island-city": (40.7447, -73.9485),
+    "ridgewood": (40.7043, -73.9060),
+    "sunnyside": (40.7432, -73.9195),
+    "woodside": (40.7454, -73.9029),
+    # Upper Manhattan
+    "east-harlem": (40.7957, -73.9425),
+    "hamilton-heights": (40.8250, -73.9500),
+    "harlem": (40.8116, -73.9465),
+    "inwood": (40.8677, -73.9212),
+    "morningside-heights": (40.8100, -73.9620),
+    "washington-heights": (40.8417, -73.9393),
+}
+
 
 def parse_price(price_str: str) -> int | None:
     """Extract integer price from a string like '$3,200'. Returns None if unparseable."""
@@ -478,7 +590,7 @@ def _format_cross_streets(low: str, high: str) -> str:
     return f"between {low_clean} & {high_clean}"
 
 
-def geoclient_lookup(address: str, geoclient_key: str) -> dict | None:
+def geoclient_lookup(address: str, geoclient_key: str, borough: str = "Manhattan") -> dict | None:
     """Look up cross streets and coordinates for a NYC address via the Geoclient API.
 
     Returns {'cross_streets': str|None, 'latitude': float|None, 'longitude': float|None}
@@ -496,7 +608,7 @@ def geoclient_lookup(address: str, geoclient_key: str) -> dict | None:
             params={
                 "houseNumber": house_number,
                 "street": street,
-                "borough": "Manhattan",
+                "borough": borough,
             },
             headers={"Ocp-Apim-Subscription-Key": geoclient_key},
             timeout=10,
@@ -580,13 +692,115 @@ def find_nearby_stations(
     return results[:max_stations]
 
 
-def _format_subway_field(nearby_stations: list[dict]) -> str:
-    """Format nearby stations for a Discord embed field value."""
+def get_stations_for_neighborhood(
+    slug: str,
+    stations: list[dict] | None = None,
+    max_miles: float = 0.75,
+    max_stations: int = 25,
+) -> list[dict]:
+    """Return subway stations near a neighborhood center.
+
+    Uses NEIGHBORHOOD_CENTERS for the lookup point and find_nearby_stations
+    for the actual search. Returns up to max_stations results sorted by distance.
+
+    Each result dict has keys: name, routes, distance_mi.
+    """
+    center = NEIGHBORHOOD_CENTERS.get(slug)
+    if not center:
+        return []
+    if stations is None:
+        stations = _load_subway_stations()
+    return find_nearby_stations(center[0], center[1], stations,
+                                max_stations=max_stations, max_miles=max_miles)
+
+
+def _format_subway_field(nearby_stations: list[dict],
+                         subway_prefs: dict | None = None) -> str:
+    """Format nearby stations for a Discord embed field value.
+
+    If subway_prefs is provided, preferred stations are marked with a star.
+    subway_prefs format: {"preferred_stations": [{"name": "...", "weight": N}, ...]}
+    """
+    pref_names = set()
+    if subway_prefs:
+        pref_names = {p["name"] for p in subway_prefs.get("preferred_stations", [])}
+
     lines = []
     for s in nearby_stations:
         routes = ", ".join(s["routes"])
-        lines.append(f"{routes} at {s['name']} ({s['distance_mi']} mi)")
+        star = " \u2b50" if s["name"] in pref_names else ""
+        lines.append(f"{routes} at {s['name']} ({s['distance_mi']} mi){star}")
     return "\n".join(lines)
+
+
+def compute_subway_pref_score(
+    lat: float, lon: float,
+    stations: list[dict],
+    subway_prefs: dict,
+) -> dict | None:
+    """Compute a weighted subway preference score for a listing.
+
+    Args:
+        lat, lon: Listing coordinates.
+        stations: Full subway station data list.
+        subway_prefs: {"preferred_stations": [{"name": "...", "weight": N}, ...]}
+
+    Returns dict with:
+        score (0-10, higher = closer to preferred stations),
+        details (list of {name, distance_mi, weight}),
+        weighted_avg_mi (weighted average distance),
+    or None if no preferred stations match.
+    """
+    preferred = subway_prefs.get("preferred_stations", [])
+    if not preferred:
+        return None
+
+    # Build station lookup by name
+    station_by_name = {}
+    for s in stations:
+        station_by_name[s["name"]] = s
+
+    details = []
+    for pref in preferred:
+        stn = station_by_name.get(pref["name"])
+        if not stn:
+            continue
+        dist = _haversine(lat, lon, stn["latitude"], stn["longitude"])
+        details.append({
+            "name": pref["name"],
+            "distance_mi": round(dist, 2),
+            "weight": pref.get("weight", 1.0),
+        })
+
+    if not details:
+        return None
+
+    # Weighted average distance
+    total_weight = sum(d["weight"] for d in details)
+    weighted_dist = sum(d["distance_mi"] * d["weight"] for d in details) / total_weight
+
+    # Score: 0 mi -> 10, 0.5 mi -> 0 (linear)
+    score = max(0.0, min(10.0, (0.5 - weighted_dist) / 0.05))
+
+    return {
+        "score": round(score, 1),
+        "weighted_avg_mi": round(weighted_dist, 2),
+        "details": details,
+    }
+
+
+def _get_subway_prefs_for_listing(listing: dict, config: dict) -> dict | None:
+    """Return subway preferences for a listing's neighborhood, or None."""
+    subway_prefs = config.get("subway_preferences")
+    if not subway_prefs:
+        return None
+    hood = listing.get("neighborhood", "")
+    # Check by slug and by display name
+    for slug, prefs in subway_prefs.items():
+        aliases = NEIGHBORHOOD_ALIASES.get(slug, set())
+        if hood in aliases or hood == slug:
+            return prefs
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -699,7 +913,8 @@ def cleanup_stale_listings(
 
         # Geo backfill during cleanup if missing coordinates
         if geoclient_key and "latitude" not in entry:
-            geo = geoclient_lookup(entry.get("address", ""), geoclient_key)
+            borough = _DISPLAY_NAME_TO_BOROUGH.get(entry.get("neighborhood", ""), "Manhattan")
+            geo = geoclient_lookup(entry.get("address", ""), geoclient_key, borough=borough)
             if geo and geo["latitude"] and geo["longitude"]:
                 entry["latitude"] = geo["latitude"]
                 entry["longitude"] = geo["longitude"]
@@ -944,6 +1159,17 @@ def build_listing_embed(listing: dict, days_on_market: int | None = None,
     if subway_info:
         fields.append({"name": "🚇 Nearby Subway", "value": subway_info, "inline": False})
 
+    subway_pref = listing.get("subway_pref_score")
+    if subway_pref:
+        score = subway_pref["score"]
+        avg_mi = subway_pref["weighted_avg_mi"]
+        details = ", ".join(f"{d['name']} ({d['distance_mi']} mi)" for d in subway_pref["details"])
+        fields.append({
+            "name": "🎯 Subway Match",
+            "value": f"{score}/10 — avg {avg_mi} mi\n{details}",
+            "inline": False,
+        })
+
     if days_on_market is not None:
         dom_value = f"{days_on_market} days"
         if days_on_market >= 30:
@@ -1173,8 +1399,26 @@ def send_personalized_notifications(
                     stations = _load_subway_stations()
                     nearby = find_nearby_stations(listing["latitude"], listing["longitude"], stations)
 
-                vs = compute_value_score(listing, medians, nearby)
-                embed = build_listing_embed(listing, value_score=vs)
+                # Per-user subway preferences override
+                user_subway_prefs = user.get("filters", {}).get("subway_preferences")
+                if user_subway_prefs and listing.get("latitude") and listing.get("longitude"):
+                    user_listing = {**listing}
+                    sprefs = _get_subway_prefs_for_listing(
+                        listing, {"subway_preferences": user_subway_prefs})
+                    if sprefs and nearby:
+                        user_listing["subway_info"] = _format_subway_field(nearby, sprefs)
+                        spref_score = compute_subway_pref_score(
+                            listing["latitude"], listing["longitude"],
+                            stations, sprefs)
+                        if spref_score:
+                            user_listing["subway_pref_score"] = spref_score
+                        else:
+                            user_listing.pop("subway_pref_score", None)
+                else:
+                    user_listing = listing
+
+                vs = compute_value_score(user_listing, medians, nearby)
+                embed = build_listing_embed(user_listing, value_score=vs)
 
                 success = send_discord_dm(bot_token, user_id, embed)
                 db_module.log_notification(user_id, listing["url"], "new_listing", success)
@@ -1308,7 +1552,8 @@ def run_scraper():
 
                 # Lazy geo backfill for old entries missing coordinates
                 if geoclient_key and "latitude" not in seen[url]:
-                    geo = geoclient_lookup(seen[url].get("address", ""), geoclient_key)
+                    geo = geoclient_lookup(seen[url].get("address", ""), geoclient_key,
+                                           borough=_borough_for_slug(neighborhood))
                     if geo and geo["latitude"] and geo["longitude"]:
                         seen[url]["latitude"] = geo["latitude"]
                         seen[url]["longitude"] = geo["longitude"]
@@ -1350,7 +1595,8 @@ def run_scraper():
             nearby = None
             if geoclient_key:
                 try:
-                    geo = geoclient_lookup(listing["address"], geoclient_key)
+                    geo = geoclient_lookup(listing["address"], geoclient_key,
+                                           borough=_borough_for_slug(neighborhood))
                 except Exception as e:
                     log.warning("Failed geoclient lookup for %s: %s", listing["address"], e)
 
@@ -1388,7 +1634,13 @@ def run_scraper():
                     stations = _load_subway_stations()
                     nearby = find_nearby_stations(geo["latitude"], geo["longitude"], stations)
                     if nearby:
-                        listing["subway_info"] = _format_subway_field(nearby)
+                        sprefs = _get_subway_prefs_for_listing(listing, config)
+                        listing["subway_info"] = _format_subway_field(nearby, sprefs)
+                        if sprefs:
+                            spref_score = compute_subway_pref_score(
+                                geo["latitude"], geo["longitude"], stations, sprefs)
+                            if spref_score:
+                                listing["subway_pref_score"] = spref_score
 
             seen[url] = seen_entry
 
@@ -1459,7 +1711,13 @@ def run_scraper():
                 stations = _load_subway_stations()
                 nearby = find_nearby_stations(listing["latitude"], listing["longitude"], stations)
                 if nearby:
-                    listing["subway_info"] = _format_subway_field(nearby)
+                    sprefs = _get_subway_prefs_for_listing(listing, config)
+                    listing["subway_info"] = _format_subway_field(nearby, sprefs)
+                    if sprefs:
+                        spref_score = compute_subway_pref_score(
+                            listing["latitude"], listing["longitude"], stations, sprefs)
+                        if spref_score:
+                            listing["subway_pref_score"] = spref_score
             else:
                 nearby = None
 

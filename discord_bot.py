@@ -18,6 +18,7 @@ from discord.ext import commands
 
 import db as db_module
 from models import VALID_NEIGHBORHOODS, DEFAULT_FILTERS, DEFAULT_NOTIFICATION_SETTINGS, MANHATTAN_AVENUES, avenue_for_longitude
+from apartment_tracker import get_stations_for_neighborhood
 
 logging.basicConfig(
     level=logging.INFO,
@@ -96,6 +97,18 @@ def _build_settings_embed(user: dict, message: str | None = None) -> discord.Emb
     embed.add_field(name="Bed Types", value=bed_display, inline=True)
     embed.add_field(name="No-Fee Only", value=no_fee, inline=True)
     embed.add_field(name="Geo Filter", value=geo_display, inline=True)
+
+    subway_prefs = filters.get("subway_preferences")
+    if subway_prefs:
+        lines = []
+        for slug, prefs in subway_prefs.items():
+            hood_name = VALID_NEIGHBORHOODS.get(slug, slug)
+            count = len(prefs.get("preferred_stations", []))
+            lines.append(f"{hood_name}: {count} station(s)")
+        subway_display = "\n".join(lines) if lines else "Off (using defaults)"
+    else:
+        subway_display = "Off (using defaults)"
+    embed.add_field(name="Subway Prefs", value=subway_display, inline=True)
 
     return embed
 
@@ -486,6 +499,32 @@ class SettingsView(discord.ui.View):
             embed=discord.Embed(
                 title="Notification Settings",
                 description=f"**Current:** {current}\n\nToggle which types of notifications you receive.",
+                color=0x3498DB,
+            ),
+            view=view,
+        )
+
+    @discord.ui.button(label="Subway Prefs", style=discord.ButtonStyle.secondary, emoji="🚇", row=1)
+    async def subway_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        view = SubwayPrefsView(self.user_id, user)
+        subway_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        hoods = user.get("filters", {}).get("neighborhoods", [])
+        if subway_prefs:
+            lines = []
+            for slug, prefs in subway_prefs.items():
+                hood_name = VALID_NEIGHBORHOODS.get(slug, slug)
+                count = len(prefs.get("preferred_stations", []))
+                lines.append(f"{hood_name}: {count} station(s)")
+            current = "**Current:** " + ", ".join(lines)
+        else:
+            current = "**Current:** Off (using global defaults)"
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title="Subway Station Preferences",
+                description=f"{current}\n\n"
+                    "Select a neighborhood to configure preferred subway stations.\n"
+                    "These preferences personalize the subway match scores in your DMs.",
                 color=0x3498DB,
             ),
             view=view,
@@ -999,6 +1038,267 @@ class NotificationToggleView(discord.ui.View):
         embed = _build_settings_embed(user)
         view = SettingsView(self.user_id)
         await interaction.response.edit_message(embed=embed, view=view)
+
+
+# ---------------------------------------------------------------------------
+# Subway station preferences
+# ---------------------------------------------------------------------------
+
+class SubwayPrefsView(discord.ui.View):
+    """Select a neighborhood to configure subway station preferences."""
+
+    def __init__(self, user_id: str, user: dict):
+        super().__init__(timeout=300)
+        self.user_id = user_id
+        hoods = user.get("filters", {}).get("neighborhoods", [])
+        subway_prefs = user.get("filters", {}).get("subway_preferences") or {}
+
+        if hoods:
+            options = []
+            for slug in sorted(hoods):
+                display = VALID_NEIGHBORHOODS.get(slug, slug)
+                has_prefs = slug in subway_prefs
+                label = f"{'✅ ' if has_prefs else ''}{display}"
+                count = len(subway_prefs.get(slug, {}).get("preferred_stations", []))
+                desc = f"{count} station(s) configured" if has_prefs else "No preferences set"
+                options.append(discord.SelectOption(
+                    label=label[:100], value=slug, description=desc,
+                ))
+            self.hood_select = discord.ui.Select(
+                placeholder="Select a neighborhood",
+                options=options[:25],
+                min_values=1, max_values=1, row=0,
+            )
+            self.hood_select.callback = self._noop
+            self.add_item(self.hood_select)
+        else:
+            self.hood_select = None
+
+    async def _noop(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Configure Stations", style=discord.ButtonStyle.primary, emoji="🚇", row=1)
+    async def configure_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not self.hood_select or not self.hood_select.values:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Please select a neighborhood first.",
+                    color=0xE74C3C,
+                ),
+                view=self,
+            )
+            return
+        slug = self.hood_select.values[0]
+        user = db_module.get_user(self.user_id)
+        view = SubwayStationSelectView(self.user_id, user, slug)
+        hood_name = VALID_NEIGHBORHOODS.get(slug, slug)
+        subway_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        existing = subway_prefs.get(slug, {}).get("preferred_stations", [])
+        if existing:
+            current = ", ".join(p["name"] for p in existing)
+        else:
+            current = "None"
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title=f"Subway Stations — {hood_name}",
+                description=f"**Current:** {current}\n\n"
+                    "Select your preferred stations from the dropdown, then save.",
+                color=0x3498DB,
+            ),
+            view=view,
+        )
+
+    @discord.ui.button(label="Clear All", style=discord.ButtonStyle.danger, emoji="🗑️", row=1)
+    async def clear_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        db_module.update_user(self.user_id, {"filters.subway_preferences": None})
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user, "Subway preferences **cleared** — using global defaults.")
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+    @discord.ui.button(label="Back to Settings", style=discord.ButtonStyle.secondary, row=2)
+    async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user)
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+
+class SubwayStationSelectView(discord.ui.View):
+    """Select subway stations and weights for a specific neighborhood."""
+
+    def __init__(self, user_id: str, user: dict, neighborhood_slug: str):
+        super().__init__(timeout=300)
+        self.user_id = user_id
+        self.neighborhood_slug = neighborhood_slug
+
+        nearby = get_stations_for_neighborhood(neighborhood_slug)
+        subway_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        existing_names = {
+            p["name"]
+            for p in subway_prefs.get(neighborhood_slug, {}).get("preferred_stations", [])
+        }
+
+        if nearby:
+            options = []
+            for s in nearby[:25]:
+                routes = ", ".join(s["routes"])
+                options.append(discord.SelectOption(
+                    label=s["name"][:100],
+                    value=s["name"],
+                    description=f"{routes} ({s['distance_mi']} mi)"[:100],
+                    default=s["name"] in existing_names,
+                ))
+            self.station_select = discord.ui.Select(
+                placeholder="Select preferred stations",
+                options=options,
+                min_values=0, max_values=len(options), row=0,
+            )
+            self.station_select.callback = self._noop
+            self.add_item(self.station_select)
+        else:
+            self.station_select = None
+
+        self._nearby = nearby
+
+    async def _noop(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+    @discord.ui.button(label="Save (Equal Weight)", style=discord.ButtonStyle.success, emoji="💾", row=1)
+    async def save_equal_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not self.station_select or not self.station_select.values:
+            # Clear prefs for this neighborhood
+            user = db_module.get_user(self.user_id)
+            full_prefs = user.get("filters", {}).get("subway_preferences") or {}
+            full_prefs.pop(self.neighborhood_slug, None)
+            save_val = full_prefs if full_prefs else None
+            db_module.update_user(self.user_id, {"filters.subway_preferences": save_val})
+            user = db_module.get_user(self.user_id)
+            embed = _build_settings_embed(user, f"Subway prefs cleared for **{VALID_NEIGHBORHOODS.get(self.neighborhood_slug, self.neighborhood_slug)}**.")
+            await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+            return
+
+        selected = self.station_select.values
+        prefs = {"preferred_stations": [{"name": n, "weight": 1.0} for n in selected]}
+        user = db_module.get_user(self.user_id)
+        full_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        full_prefs[self.neighborhood_slug] = prefs
+        db_module.update_user(self.user_id, {"filters.subway_preferences": full_prefs})
+
+        hood_name = VALID_NEIGHBORHOODS.get(self.neighborhood_slug, self.neighborhood_slug)
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user, f"Saved **{len(selected)} station(s)** for {hood_name} (equal weight).")
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+    @discord.ui.button(label="Set Weights", style=discord.ButtonStyle.primary, emoji="⚖️", row=1)
+    async def weights_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not self.station_select or not self.station_select.values:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Please select at least one station first.",
+                    color=0xE74C3C,
+                ),
+                view=self,
+            )
+            return
+
+        selected = self.station_select.values
+        if len(selected) > 5:
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="Too Many Stations",
+                    description=f"Custom weights support up to **5 stations** (you selected {len(selected)}).\n"
+                        "Please reduce your selection or use **Save (Equal Weight)**.",
+                    color=0xE74C3C,
+                ),
+                view=self,
+            )
+            return
+
+        # Build route lookup from nearby stations
+        route_lookup = {s["name"]: ", ".join(s["routes"]) for s in (self._nearby or [])}
+        station_routes = [route_lookup.get(n, "") for n in selected]
+        modal = SubwayWeightModal(self.user_id, self.neighborhood_slug, selected, station_routes)
+        await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="Remove Prefs", style=discord.ButtonStyle.danger, emoji="🗑️", row=2)
+    async def remove_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        full_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        full_prefs.pop(self.neighborhood_slug, None)
+        save_val = full_prefs if full_prefs else None
+        db_module.update_user(self.user_id, {"filters.subway_preferences": save_val})
+        hood_name = VALID_NEIGHBORHOODS.get(self.neighborhood_slug, self.neighborhood_slug)
+        user = db_module.get_user(self.user_id)
+        embed = _build_settings_embed(user, f"Subway prefs **removed** for {hood_name}.")
+        await interaction.response.edit_message(embed=embed, view=SettingsView(self.user_id))
+
+    @discord.ui.button(label="Back", style=discord.ButtonStyle.secondary, row=2)
+    async def back_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        user = db_module.get_user(self.user_id)
+        view = SubwayPrefsView(self.user_id, user)
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title="Subway Station Preferences",
+                description="Select a neighborhood to configure preferred subway stations.",
+                color=0x3498DB,
+            ),
+            view=view,
+        )
+
+
+class SubwayWeightModal(discord.ui.Modal, title="Set Station Weights"):
+    """Modal with up to 5 TextInput fields for station weights."""
+
+    def __init__(self, user_id: str, neighborhood_slug: str,
+                 station_names: list[str], station_routes: list[str]):
+        super().__init__()
+        self.user_id = user_id
+        self.neighborhood_slug = neighborhood_slug
+        self.station_names = station_names
+        self.weight_inputs: list[discord.ui.TextInput] = []
+
+        for i, name in enumerate(station_names[:5]):
+            routes = station_routes[i] if i < len(station_routes) else ""
+            label = f"{name} ({routes})" if routes else name
+            inp = discord.ui.TextInput(
+                label=label[:45],
+                placeholder="1.0",
+                default="1.0",
+                required=True,
+                max_length=10,
+            )
+            self.weight_inputs.append(inp)
+            self.add_item(inp)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        stations = []
+        for i, inp in enumerate(self.weight_inputs):
+            try:
+                weight = float(inp.value)
+                if weight <= 0:
+                    raise ValueError("Weight must be positive")
+            except ValueError:
+                await interaction.response.send_message(
+                    f"Invalid weight for **{self.station_names[i]}**: '{inp.value}'. "
+                    "Please enter a positive number (e.g. 1.0, 2.5).",
+                    ephemeral=True,
+                )
+                return
+            stations.append({"name": self.station_names[i], "weight": weight})
+
+        user = db_module.get_user(self.user_id)
+        full_prefs = user.get("filters", {}).get("subway_preferences") or {}
+        full_prefs[self.neighborhood_slug] = {"preferred_stations": stations}
+        db_module.update_user(self.user_id, {"filters.subway_preferences": full_prefs})
+
+        hood_name = VALID_NEIGHBORHOODS.get(self.neighborhood_slug, self.neighborhood_slug)
+        details = ", ".join(f"{s['name']} (×{s['weight']})" for s in stations)
+        await interaction.response.send_message(
+            f"Subway weights saved for **{hood_name}**:\n{details}\n\n"
+            "The settings panel above reflects your changes.",
+            ephemeral=True,
+        )
 
 
 # ---------------------------------------------------------------------------

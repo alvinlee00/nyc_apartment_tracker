@@ -282,3 +282,162 @@ class TestNoFeeToggle:
         assert updated["filters"]["no_fee"] is True
         # Now uses edit_message instead of send_message
         interaction.response.edit_message.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# SubwayPrefsView
+# ---------------------------------------------------------------------------
+
+class TestSubwayPrefsView:
+    @pytest.mark.asyncio
+    async def test_shows_subscribed_neighborhoods(self):
+        from discord_bot import SubwayPrefsView
+
+        db_module.create_user("123456789", "testuser#1234", filters={
+            "neighborhoods": ["long-island-city", "east-village"],
+            "min_price": 0, "max_price": 5000, "bed_rooms": [],
+            "no_fee": False, "geo_bounds": None, "subway_preferences": None,
+        })
+        user = db_module.get_user("123456789")
+        view = SubwayPrefsView("123456789", user)
+
+        assert view.hood_select is not None
+        option_values = [opt.value for opt in view.hood_select.options]
+        assert "long-island-city" in option_values
+        assert "east-village" in option_values
+
+    @pytest.mark.asyncio
+    async def test_no_neighborhoods(self):
+        from discord_bot import SubwayPrefsView
+
+        db_module.create_user("123456789", "testuser#1234", filters={
+            "neighborhoods": [],
+            "min_price": 0, "max_price": 5000, "bed_rooms": [],
+            "no_fee": False, "geo_bounds": None, "subway_preferences": None,
+        })
+        user = db_module.get_user("123456789")
+        view = SubwayPrefsView("123456789", user)
+
+        assert view.hood_select is None
+
+    @pytest.mark.asyncio
+    async def test_marks_configured_neighborhoods(self):
+        from discord_bot import SubwayPrefsView
+
+        db_module.create_user("123456789", "testuser#1234", filters={
+            "neighborhoods": ["long-island-city", "east-village"],
+            "min_price": 0, "max_price": 5000, "bed_rooms": [],
+            "no_fee": False, "geo_bounds": None,
+            "subway_preferences": {
+                "long-island-city": {
+                    "preferred_stations": [{"name": "Court Sq", "weight": 1.0}]
+                }
+            },
+        })
+        user = db_module.get_user("123456789")
+        view = SubwayPrefsView("123456789", user)
+
+        lic_option = next(o for o in view.hood_select.options if o.value == "long-island-city")
+        assert "✅" in lic_option.label
+        ev_option = next(o for o in view.hood_select.options if o.value == "east-village")
+        assert "✅" not in ev_option.label
+
+    @pytest.mark.asyncio
+    async def test_clear_all_removes_prefs(self):
+        from discord_bot import SubwayPrefsView
+
+        db_module.create_user("123456789", "testuser#1234", filters={
+            "neighborhoods": ["long-island-city"],
+            "min_price": 0, "max_price": 5000, "bed_rooms": [],
+            "no_fee": False, "geo_bounds": None,
+            "subway_preferences": {
+                "long-island-city": {
+                    "preferred_stations": [{"name": "Court Sq", "weight": 1.0}]
+                }
+            },
+        })
+        user = db_module.get_user("123456789")
+        view = SubwayPrefsView("123456789", user)
+
+        interaction = _make_interaction()
+        await view.clear_btn.callback(interaction)
+
+        updated = db_module.get_user("123456789")
+        assert updated["filters"].get("subway_preferences") is None
+
+
+# ---------------------------------------------------------------------------
+# SubwayWeightModal
+# ---------------------------------------------------------------------------
+
+class TestSubwayWeightModal:
+    @pytest.mark.asyncio
+    async def test_valid_weights_saved(self):
+        from discord_bot import SubwayWeightModal
+
+        db_module.create_user("123456789", "testuser#1234", filters={
+            "neighborhoods": ["long-island-city"],
+            "min_price": 0, "max_price": 5000, "bed_rooms": [],
+            "no_fee": False, "geo_bounds": None, "subway_preferences": None,
+        })
+
+        modal = SubwayWeightModal(
+            "123456789", "long-island-city",
+            ["Court Sq", "Queensboro Plaza"],
+            ["7, E, F, G", "7, N, W"],
+        )
+        # Mock the TextInput values
+        modal.weight_inputs[0] = MagicMock()
+        modal.weight_inputs[0].value = "2.0"
+        modal.weight_inputs[1] = MagicMock()
+        modal.weight_inputs[1].value = "1.5"
+
+        interaction = _make_interaction()
+        await modal.on_submit(interaction)
+
+        updated = db_module.get_user("123456789")
+        prefs = updated["filters"]["subway_preferences"]["long-island-city"]
+        assert len(prefs["preferred_stations"]) == 2
+        assert prefs["preferred_stations"][0]["name"] == "Court Sq"
+        assert prefs["preferred_stations"][0]["weight"] == 2.0
+        assert prefs["preferred_stations"][1]["weight"] == 1.5
+
+    @pytest.mark.asyncio
+    async def test_invalid_weight_rejected(self):
+        from discord_bot import SubwayWeightModal
+
+        db_module.create_user("123456789", "testuser#1234")
+
+        modal = SubwayWeightModal(
+            "123456789", "long-island-city",
+            ["Court Sq"],
+            ["7, E, F, G"],
+        )
+        modal.weight_inputs[0] = MagicMock()
+        modal.weight_inputs[0].value = "abc"
+
+        interaction = _make_interaction()
+        await modal.on_submit(interaction)
+
+        call_args = interaction.response.send_message.call_args
+        assert "invalid" in call_args[0][0].lower()
+
+    @pytest.mark.asyncio
+    async def test_negative_weight_rejected(self):
+        from discord_bot import SubwayWeightModal
+
+        db_module.create_user("123456789", "testuser#1234")
+
+        modal = SubwayWeightModal(
+            "123456789", "long-island-city",
+            ["Court Sq"],
+            ["7, E, F, G"],
+        )
+        modal.weight_inputs[0] = MagicMock()
+        modal.weight_inputs[0].value = "-1.0"
+
+        interaction = _make_interaction()
+        await modal.on_submit(interaction)
+
+        call_args = interaction.response.send_message.call_args
+        assert "invalid" in call_args[0][0].lower()
