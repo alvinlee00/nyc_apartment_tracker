@@ -47,6 +47,8 @@ jobs:
           NYC_GEOCLIENT_KEY: ${{ secrets.NYC_GEOCLIENT_KEY }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          PUSH_API_URL: ${{ secrets.PUSH_API_URL }}
+          PUSH_API_SECRET: ${{ secrets.PUSH_API_SECRET }}
         run: python apartment_tracker.py
 
       - name: Commit updated seen listings
